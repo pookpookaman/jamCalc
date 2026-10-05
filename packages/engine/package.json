@@ -1,0 +1,21 @@
+{
+  "name": "@jamcalc/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Unit-aware calculation engine. Pure: no DOM, no framework, no I/O.",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "types": "./dist/index.d.ts",
+  "license": "MIT"
+}

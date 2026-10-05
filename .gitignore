@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Desktop packaging: the studio build copied in, and the installers.
+apps/desktop/renderer/
+apps/desktop/release/
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+.vitest-cache/
+node_modules/.vite*/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Secrets: never commit these. An example file may be.
+.env
+.env.*
+!.env.example
+
+# Editors and local tools
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch
+.scratch/
+*.tmp
+
+# Private planning notes, kept on this machine only
+planning/
+
+# Example sheets and their pinned results, kept private
+examples/
+test/example-results.json

@@ -1,0 +1,25 @@
+{
+  "name": "@jamcalc/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "calc \u2014 the document API from a terminal.",
+  "bin": {
+    "calc": "./dist/bin.js"
+  },
+  "main": "./dist/main.js",
+  "exports": {
+    ".": {
+      "import": "./dist/main.js",
+      "default": "./dist/main.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@jamcalc/engine": "*"
+  },
+  "license": "MIT"
+}

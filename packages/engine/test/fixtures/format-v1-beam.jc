@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "title": "Simply Supported Beam",
+  "titleBlock": {
+    "project": "Example",
+    "by": "JD",
+    "rev": "0"
+  },
+  "page": {
+    "size": "letter",
+    "orientation": "portrait",
+    "margins": {
+      "top": 64,
+      "right": 48,
+      "bottom": 56,
+      "left": 48
+    },
+    "header": {
+      "left": "{project}",
+      "center": "{title}",
+      "right": "Sheet {page} of {pages}",
+      "enabled": true,
+      "height": 18,
+      "fontSize": 10,
+      "offset": 24,
+      "rule": true
+    },
+    "footer": {
+      "left": "By {by}",
+      "center": "",
+      "right": "{date}   Rev {rev}",
+      "enabled": true,
+      "height": 18,
+      "fontSize": 10,
+      "offset": 24,
+      "rule": true
+    }
+  },
+  "regions": [
+    {
+      "id": "r_01",
+      "kind": "text",
+      "position": {
+        "x": 48,
+        "y": 16
+      },
+      "runs": [
+        {
+          "text": "Uniformly loaded beam — flexure"
+        }
+      ],
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_02",
+      "kind": "math",
+      "position": {
+        "x": 48,
+        "y": 64
+      },
+      "source": "w := 2.4 klf",
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_03",
+      "kind": "math",
+      "position": {
+        "x": 48,
+        "y": 100
+      },
+      "source": "L := 25 ft",
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_04",
+      "kind": "math",
+      "position": {
+        "x": 48,
+        "y": 136
+      },
+      "source": "M := w*L^2/8 = kip*ft",
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_05",
+      "kind": "text",
+      "position": {
+        "x": 48,
+        "y": 184
+      },
+      "runs": [
+        {
+          "text": "Section capacity"
+        }
+      ],
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_06",
+      "kind": "math",
+      "position": {
+        "x": 48,
+        "y": 220
+      },
+      "source": "Z := 95.4 in^3",
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_07",
+      "kind": "math",
+      "position": {
+        "x": 48,
+        "y": 256
+      },
+      "source": "Fy := 50 ksi",
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_08",
+      "kind": "math",
+      "position": {
+        "x": 48,
+        "y": 292
+      },
+      "source": "cap := 0.9*Z*Fy = kip*ft",
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "r_09",
+      "kind": "math",
+      "position": {
+        "x": 48,
+        "y": 340
+      },
+      "source": "DCR := M/cap =",
+      "origin": {
+        "author": "human",
+        "at": "2026-09-05T00:00:00.000Z"
+      }
+    }
+  ],
+  "changeLog": []
+}

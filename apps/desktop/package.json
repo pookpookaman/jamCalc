@@ -1,0 +1,22 @@
+{
+  "name": "@jamcalc/desktop",
+  "productName": "jamCalc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron shell (ADR-0010). Hosts the studio; owns the window, the menus and, later, the files.",
+  "main": "dist/main.js",
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "build:renderer": "npm run build --prefix ../studio && node scripts/copy-renderer.cjs",
+    "start": "npm run build && npm run build:renderer && electron .",
+    "dev": "npm run build && node scripts/dev.cjs",
+    "dist": "npm run build && npm run build:renderer && electron-builder --config electron-builder.config.cjs --win",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  },
+  "license": "MIT"
+}

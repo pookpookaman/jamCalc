@@ -1,0 +1,1743 @@
+:root {
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #d8d8d4;
+  --paper: #ffffff;
+  --desk: #e8e6e1;
+  --accent: #1f5fa8;
+  --trace: #eef4fb;
+  --error: #b3261e;
+  --blocked: #8a6d00;
+  --mono: "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  /* Everything around the page: bars, panels, menus, popovers. The page has
+     its own colours and keeps them in either theme. */
+  --chrome: #fafaf8;
+  --chrome-2: #f3f2ef;
+  --surface: #ffffff;
+  --hover: #f0f0ec;
+  --rule-soft: #efefec;
+  --shadow: rgba(0, 0, 0, 0.18);
+  color-scheme: light;
+}
+
+/**
+ * Dark is for the room, not the paper.
+ *
+ * A sheet on screen is a picture of what comes out of the printer, so the page
+ * keeps its white ground and dark ink whichever theme is on. What changes is
+ * everything around it — and the page restores the light tokens for its own
+ * contents, so a region, a fraction or an error marker is drawn exactly as it
+ * will be printed.
+ */
+:root[data-theme="dark"] {
+  --ink: #e6e6e3;
+  --muted: #a3a39d;
+  --line: #3c3c39;
+  --desk: #191918;
+  --accent: #7fb2f0;
+  --trace: #22303f;
+  --error: #ef8a82;
+  --blocked: #d8b13a;
+  --chrome: #232322;
+  --chrome-2: #2a2a28;
+  --surface: #2f2f2d;
+  --hover: #3a3a37;
+  --rule-soft: #343432;
+  --shadow: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] .page {
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #d8d8d4;
+  --accent: #1f5fa8;
+  --trace: #eef4fb;
+  --error: #b3261e;
+  --blocked: #8a6d00;
+  --surface: #ffffff;
+  --hover: #f0f0ec;
+  --rule-soft: #efefec;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--desk);
+}
+
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+/* --- toolbar --- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--line);
+}
+.toolbar { flex-wrap: wrap; row-gap: 6px; }
+.toolbar .title {
+  font-size: 14px;
+  flex: 0 1 auto;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 6px;
+  border-radius: 4px;
+  /* Gives up width first, so the buttons keep theirs. */
+  flex: 1 1 180px;
+  min-width: 120px;
+  color: inherit;
+}
+.toolbar .title:hover { border-color: var(--line); }
+.toolbar .title:focus { border-color: var(--accent); outline: none; background: var(--surface); }
+.toolbar .spacer { flex: 1; }
+.toolbar button {
+  font: inherit;
+  padding: 5px 9px;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.toolbar button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.toolbar button:disabled { opacity: 0.4; cursor: default; }
+
+/* A shortcut belongs on the button it belongs to. */
+.toolbar kbd {
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 3px;
+  margin-left: 4px;
+  background: var(--chrome-2);
+}
+
+/* --- toolbar menus --- */
+.menu { position: relative; display: inline-flex; }
+.menu > button .caret { margin-left: 5px; color: var(--muted); }
+.menu > button.menu-open { border-color: var(--accent); color: var(--accent); }
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 20;
+  min-width: 190px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  box-shadow: 0 6px 18px var(--shadow);
+}
+.menu-panel button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 6px 8px;
+}
+/* The key sits at the far edge, so the list of them reads down the side. */
+.menu-panel kbd { margin-left: auto; }
+.menu-panel button:hover:not(:disabled) { background: var(--hover); border-color: transparent; color: inherit; }
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.menu-row.check { cursor: pointer; }
+.menu-row input { margin: 0; }
+.menu-row select { font: inherit; margin-left: auto; }
+/* --- alignment guides --- */
+.guide {
+  position: absolute;
+  z-index: 6;
+  background: var(--accent);
+  pointer-events: none;
+}
+.guide-x { width: 1px; }
+.guide-y { height: 1px; }
+
+.tabs .panel-close {
+  flex: none;
+  width: 30px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--muted);
+}
+.tabs .panel-close:hover { color: var(--ink); }
+
+.menu-rule { height: 1px; background: var(--line); margin: 4px 2px; }
+.menu-note {
+  margin: 2px 8px 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* --- layout --- */
+.body { flex: 1; display: flex; min-height: 0; }
+.canvas {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  /* Centred while the page fits; once it is wider than the pane — side by
+     side, most often — it starts at the left edge instead. Plain `center`
+     pushes half the overflow off the left, where no scrolling reaches it. */
+  align-items: safe center;
+  gap: 24px;
+}
+
+.page {
+  position: relative;
+  background: var(--paper);
+  /* The page carries its own ink as well as its own ground: without this the
+     text inside it inherits the colour of the chrome, which in a dark theme is
+     a pale grey on white paper. */
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  flex: none;
+}
+
+/* The content box is the printable area; regions live inside it and are
+   positioned relative to it, so changing a margin moves the whole block
+   without touching a single stored coordinate. */
+.content { position: absolute; }
+
+/* --- regions --- */
+.region {
+  position: absolute;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: default;
+  line-height: 1.45;
+}
+/* Math never wraps; a wrapped equation is unreadable. Text does. */
+.region.is-math { white-space: nowrap; }
+.region.is-text { white-space: pre-wrap; overflow-wrap: break-word; }
+.region:hover { border-color: var(--line); }
+.region.is-selected { border-color: var(--accent); background: #fff; }
+.region.is-traced { background: var(--trace); }
+.region.is-error { border-color: var(--error); }
+.region.is-blocked { border-color: var(--blocked); }
+
+.handle {
+  width: 8px;
+  align-self: stretch;
+  min-height: 15px;
+  flex: none;
+  cursor: grab;
+  border-radius: 2px;
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 3px 3px;
+  background-position: 1px 2px;
+  color: transparent;
+  transition: color 90ms;
+}
+.handle:hover { color: var(--muted) !important; background-color: rgba(0,0,0,0.04); }
+.handle:active { cursor: grabbing; }
+
+/* Moving a region: its edge is the handle. A band straddling the border on
+   every side, mostly outside the box, so it is easy to find and covers almost
+   none of the content that a click opens for editing. */
+.region > .edge { position: absolute; z-index: 1; cursor: move; }
+.region > .edge-top    { top: -5px;    left: -5px; right: -5px; height: 8px; }
+.region > .edge-bottom { bottom: -5px; left: -5px; right: -5px; height: 8px; }
+.region > .edge-left   { left: -5px;   top: -5px; bottom: -5px; width: 8px; }
+.region > .edge-right  { right: -5px;  top: -5px; bottom: -5px; width: 8px; }
+.region:has(> .edge:hover) { border-color: var(--muted); }
+.region > .resize { z-index: 2; }
+
+.region input {
+  font: inherit;
+  border: none;
+  background: transparent;
+  padding: 1px 2px;
+  color: inherit;
+}
+.region input:focus { outline: 1px solid var(--accent); border-radius: 2px; }
+.region .source { font-family: var(--mono); font-size: 1em; }
+/* Newlines are content: a text region holds prose, and prose has lines. */
+.region .text {
+  font-size: 1em;
+  font-weight: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* A resized box is the size you gave it: the text fills it, so clicking
+   anywhere inside starts editing rather than only on the words. */
+.region.is-text { display: flex; flex-direction: column; }
+.region.is-text > .text,
+.region.is-text > .text-edit { flex: 1 1 auto; display: block; }
+.region .result { font-family: var(--mono); color: var(--accent); font-size: 1em; }
+.region .result.problem { display: none; }
+/* The message lives in the status bar; the region keeps only the mark, so a
+   long unit-mismatch string cannot reflow the sheet it is complaining about. */
+.region.is-error::after,
+.region.is-blocked::after {
+  content: "!";
+  position: absolute;
+  right: -7px;
+  top: -7px;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--error);
+  color: #fff;
+  font: 700 9px/13px system-ui, sans-serif;
+  text-align: center;
+}
+.region.is-blocked::after { background: var(--blocked); content: "?"; }
+
+/* --- side panel --- */
+.panel {
+  width: 340px;
+  flex: none;
+  border-left: 1px solid var(--line);
+  background: var(--chrome);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* The panel always fills the window height and its content scrolls inside
+   it. Left to overflow, a long list of values ran out of the box and pushed
+   the whole app up with it. */
+.panel-body { flex: 1; min-height: 0; overflow: auto; }
+
+/* search above the values list; outside the scrolling body so it stays put */
+.symbol-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.symbol-search input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+}
+.symbol-search input:focus { outline: none; border-color: var(--accent); }
+.symbol-search .count { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.symbols-empty { margin: 0; padding: 12px 10px; color: var(--muted); font-size: 12px; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button {
+  flex: 1;
+  font: inherit;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+.tabs button.active { color: var(--ink); border-bottom-color: var(--accent); }
+
+.symbols { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+.symbols td { padding: 4px 8px; border-bottom: 1px solid var(--rule-soft); }
+.symbols .name { font-weight: 600; }
+.symbols .val { text-align: right; color: var(--accent); }
+.symbols .src { color: var(--muted); width: 42px; }
+
+.projection {
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+/* --- status --- */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 4px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--chrome);
+  color: var(--muted);
+  font-size: 12px;
+  min-height: 28px;
+}
+.status .spacer { flex: 1; }
+.status.has-problem { background: #fdf2f1; border-top-color: var(--error); }
+
+.problem-msg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: inherit;
+  color: var(--error);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  max-width: 70%;
+}
+.problem-msg:hover { text-decoration: underline; }
+.problem-msg .mark {
+  flex: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--error);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+.problem-msg b { font-family: var(--mono); font-weight: 600; }
+.problem-msg em { font-style: normal; opacity: 0.75; }
+
+/* --- print ---
+   The deliverable in this industry is paper. Printing is not an export
+   feature bolted on later; the page is the canvas. */
+@media print {
+  body { background: #fff; }
+  .toolbar, .panel, .status, .handle, .edge, .guide { display: none !important; }
+  .canvas { overflow: visible; padding: 0; }
+  .page { box-shadow: none; }
+  .region { border-color: transparent !important; background: transparent !important; }
+  .region input { border: none; }
+}
+
+/* --- format bar --- */
+.format {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: var(--chrome-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.format .label.muted { color: var(--muted); font-weight: 400; font-style: italic; }
+
+/* The three alignment buttons share a glyph and are told apart by where its
+   lines sit, the way every word processor draws them. */
+.format .toggle.align { padding: 3px 6px; line-height: 0; }
+.format .toggle.align svg { display: block; }
+.format .label { color: var(--muted); font-weight: 600; }
+.format .spacer { flex: 1; }
+.format .hint { color: var(--muted); }
+.format select { font: inherit; padding: 2px 4px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
+.format .colour-row { display: flex; align-items: center; gap: 3px; }
+.format .colour-label { color: var(--muted); font-size: 11px; margin-right: 2px; }
+.format .swatch {
+  width: 16px; height: 16px; border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.25); cursor: pointer; padding: 0;
+}
+.format .swatch.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* The default: white with a stroke through it, the usual sign for "none set". */
+.format .swatch-default {
+  background: linear-gradient(to top right, transparent 45%, #b3261e 45% 55%, transparent 55%), #fff;
+}
+/* Any other colour: a spectrum until one is chosen, then that colour. */
+.format .swatch-custom {
+  position: relative;
+  display: inline-block;
+  background: conic-gradient(#e53935, #fdd835, #43a047, #1e88e5, #8e24aa, #e53935);
+  overflow: hidden;
+}
+.format .swatch-custom input {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; border: 0; padding: 0; cursor: pointer;
+}
+.format .toggle {
+  font: inherit; width: 24px; height: 22px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 3px;
+}
+.format .toggle.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.toolbar .divider { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
+
+/* --- rendered math ---
+   Serif italic for variables is the convention every printed calculation
+   uses; it is what makes notation read as notation rather than as code. */
+.mv {
+  font-family: "Cambria Math", "Latin Modern Math", Georgia, serif;
+  font-size: 1.15em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+.rendered { cursor: text; display: inline-flex; align-items: center; gap: 8px; }
+.mv-name i { font-style: italic; }
+.mv-name sub, .mv sup {
+  font-size: 0.62em;
+  font-style: normal;
+  font-family: system-ui, sans-serif;
+}
+.mv-name sub { vertical-align: -0.25em; }
+.mv sup { vertical-align: 0.5em; }
+.mv-prime { font-style: normal; }
+.mv-num { font-family: system-ui, sans-serif; font-size: 0.88em; }
+/* Grey unless the region's equation has a colour of its own (--unit-color),
+   and in a result, unless the result has one (--result-unit-color). */
+.mv-unit { font-family: system-ui, sans-serif; color: var(--unit-color, var(--muted)); font-size: 0.95em; }
+.mv-result .mv-unit { color: var(--result-unit-color, var(--muted)); }
+.mv-thin { display: inline-block; width: 0.22em; }
+.mv-op { margin: 0 0.3em; font-family: system-ui, sans-serif; }
+.mv-op-tight { margin: 0 0.12em; }
+.mv-assign { margin: 0 0.4em; font-family: system-ui, sans-serif; color: var(--muted); }
+.mv-fn { font-style: normal; font-family: system-ui, sans-serif; }
+.mv-result { color: var(--result-color, var(--accent)); font-family: system-ui, sans-serif; font-size: 0.88em; }
+
+/* stacked fraction */
+/* Both parts stretch to the wider of the two, so the rule drawn on the
+   denominator spans the whole fraction; the content is centred inside. */
+.mv-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: center;
+  vertical-align: middle;
+  margin: 0 0.22em;
+  font-size: 0.94em;
+}
+.mv-frac > .mv-num-part { padding: 0 0.3em 1px; }
+.mv-frac > .mv-den-part { padding: 1px 0.3em 0; border-top: 1px solid currentColor; }
+
+/* square root: the sign stretches to the height of its radicand */
+.mv-sqrt {
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+  margin: 0 0.1em;
+}
+/* An SVG keeps its own aspect ratio rather than stretching as a flex item,
+   so the sign fills a fixed-width slot that the row stretches instead. */
+.mv-sqrt > .mv-atom { position: relative; flex: none; width: 0.62em; }
+.mv-radical {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+.mv-radicand { border-top: 1px solid currentColor; padding: 0.12em 0.15em 0 0.08em; }
+
+/* Powers. The exponent is drawn smaller than its base, and beside a base
+   taller than a line of text it rises to the top of that base instead of
+   sitting at text height. */
+.mv sup.mv-exp { font-size: 0.72em; }
+.mv-pow-tall {
+  display: inline-flex;
+  align-items: flex-start;
+  vertical-align: middle;
+}
+.mv-pow-tall > .mv-pow-base { display: inline-flex; align-items: center; }
+.mv-pow-tall > sup.mv-exp {
+  vertical-align: baseline;
+  line-height: 1;
+  margin: -0.3em 0 0 0.08em;
+}
+/* A fraction inside an exponent stays small rather than stretching the line. */
+.mv-exp .mv-frac { font-size: 0.85em; }
+
+/* Brackets that grow with what they wrap. As with the radical, the SVG fills a
+   fixed-width slot that the row stretches, because an SVG will not stretch as
+   a flex item on its own. */
+.mv-group {
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+}
+.mv-group > .mv-group-body {
+  display: inline-flex;
+  align-items: center;
+  /* Room between the bracket and what it holds, and a floor so that empty
+     brackets — `f()` while it is being typed — keep their shape. */
+  padding: 0 0.1em;
+  min-height: 1.05em;
+}
+/* A call is its name beside its bracketed arguments. */
+.mv-call { display: inline-flex; align-items: center; }
+.mv-stretch { position: relative; flex: none; width: 0.38em; }
+.mv-stretch > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.1;
+}
+
+/* --- headers and footers (docs/headers.md) --- */
+/* Drawn inside the page, which keeps the light palette whatever the theme. */
+.band-zone {
+  position: absolute;
+  left: 0;
+  z-index: 2;
+  color: #333;
+  font-size: 10px;
+}
+/* An empty band is invisible until pointed at, then says how to fill it. */
+.band-zone.is-empty:not(.is-editing):hover { outline: 1px dashed var(--line); outline-offset: -6px; }
+.band-zone.is-empty:not(.is-editing):hover::after {
+  content: attr(data-hint);
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--muted); font-size: 11px;
+  pointer-events: none;
+}
+.band-zone.is-editing {
+  z-index: 5;
+  background: rgba(31, 95, 168, 0.04);
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
+}
+.band-zone.is-hidden { opacity: 0.45; }
+.band-zone.is-dropping { background: rgba(31, 95, 168, 0.12); }
+.band-name {
+  position: absolute; top: 2px; right: 4px;
+  font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent); pointer-events: none;
+}
+.band-footer .band-name { top: auto; bottom: 2px; }
+/* The band's inner edge: drag to make it taller or shorter. */
+.band-edge { position: absolute; left: 0; right: 0; height: 7px; cursor: ns-resize; }
+.band-header .band-edge { bottom: -4px; }
+.band-footer .band-edge { top: -4px; }
+.band-edge:hover { background: rgba(31, 95, 168, 0.25); }
+
+.band-item {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-color: #999;
+  pointer-events: none;
+}
+.band-zone.is-editing .band-item { pointer-events: auto; cursor: move; }
+.band-zone.is-editing .band-item:hover { outline: 1px dotted var(--accent); }
+.band-item.is-selected { outline: 1px solid var(--accent) !important; overflow: visible; }
+.band-caption { font-size: 0.72em; letter-spacing: 0.05em; text-transform: uppercase; color: #777; }
+.band-value.is-placeholder { color: #aaa; font-style: italic; }
+.band-item img { width: 100%; height: 100%; object-fit: contain; }
+.band-item.kind-box { border-width: 1px; border-style: solid; }
+/* A line's box is wider than the stroke so it can be grabbed. */
+.band-item.kind-line::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 3px;
+  border-top: 1px solid; border-color: inherit;
+}
+.band-item.kind-line.is-vertical::before {
+  top: 0; bottom: 0; left: 3px; right: auto;
+  border-top: 0; border-left: 1px solid; border-color: inherit;
+}
+.band-resize {
+  position: absolute; right: -4px; bottom: -4px;
+  width: 8px; height: 8px;
+  background: var(--accent); border: 1px solid #fff;
+  cursor: nwse-resize;
+}
+.band-item.kind-line .band-resize { bottom: -1px; cursor: ew-resize; }
+.band-item.kind-line.is-vertical .band-resize { right: -1px; bottom: -4px; cursor: ns-resize; }
+.band-input {
+  width: 100%; min-width: 80px;
+  font: inherit; color: inherit;
+  padding: 0 2px;
+  border: 1px solid var(--accent); border-radius: 2px;
+  background: #fff;
+}
+/* The sheet is set aside while its header and footer are edited. */
+.page.is-editing-bands .content { opacity: 0.35; }
+
+/* The bar that replaces the Format bar while editing them. */
+.band-bar { flex-wrap: wrap; row-gap: 6px; }
+.band-bar .band-chip {
+  font: inherit; font-size: 12px; padding: 3px 8px; cursor: grab;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
+}
+.band-bar .band-chip:hover { border-color: var(--accent); color: var(--accent); }
+/* Open, the fields take a row of their own inside the bar: a dropdown would
+   hang over the top of the page, right where they are to be dropped. */
+.band-fields { display: contents; }
+.band-fields[open] > .band-field-list { order: 10; }
+.band-fields > summary {
+  list-style: none; cursor: pointer; font-size: 12px;
+  padding: 3px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+}
+.band-fields > summary::after { content: " \25BE"; color: var(--muted); }
+.band-fields[open] > summary { border-color: var(--accent); color: var(--accent); }
+.band-field-list {
+  flex-basis: 100%;
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding-top: 2px;
+}
+.band-item-controls { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.band-bar .sep { width: 1px; height: 18px; background: var(--line); }
+.band-bar .band-hint { font-size: 12px; }
+.band-bar-end { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
+.band-bar .band-done,
+.band-bar .band-delete {
+  font: inherit; font-size: 12px; padding: 3px 12px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink);
+}
+.band-bar .band-done { border-color: var(--accent); background: var(--accent); color: #fff; }
+.page-panel .panel-note { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.page-panel .panel-button {
+  font: inherit; font-size: 12px; padding: 4px 10px; cursor: pointer;
+  border: 1px solid var(--accent); border-radius: 4px; background: var(--surface); color: var(--accent);
+}
+
+@media print {
+  /* Only what was put in the band prints; none of the means of editing it. */
+  .band-zone { outline: none !important; background: none !important; }
+  .band-zone::after,
+  .band-name,
+  .band-edge,
+  .band-resize,
+  .band-value.is-placeholder { display: none !important; }
+  .band-item { outline: none !important; }
+}
+
+/* --- page panel --- */
+.page-panel { padding: 10px; overflow: auto; }
+.page-panel .field { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.page-panel .field span { width: 52px; color: var(--muted); font-size: 12px; }
+.page-panel .field input {
+  flex: 1; font: inherit; font-size: 12px; padding: 3px 5px;
+  border: 1px solid var(--line); border-radius: 3px;
+}
+.page-panel hr { border: none; border-top: 1px solid var(--line); margin: 12px 0; }
+.page-panel .tokens { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.page-panel code { font-family: var(--mono); font-size: 10.5px; }
+
+/* --- symbol rows are clickable --- */
+.symbols tr { cursor: pointer; }
+.symbols tr:hover { background: var(--hover); }
+.symbols tr.on { background: var(--trace); }
+
+@media print {
+  .format { display: none !important; }
+}
+
+
+/* --- in-place equation editing ---
+   The input is transparent, not hidden: it must be a real focused element to
+   get selection, arrow keys, undo and IME, but the only caret the user sees is
+   the one drawn inside the rendered math. */
+.rendered { position: relative; }
+.ghost-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  padding: 0;
+  margin: 0;
+  cursor: text;
+  /* Pointer events belong to the rendered atoms, which know their source
+     spans; the input only owns the keyboard. */
+  pointer-events: none;
+}
+.rendered.is-editing { outline: 1px solid var(--accent); border-radius: 2px; }
+
+.mv-atom { display: inline-flex; align-items: center; }
+.rendered.is-editing .mv-atom { cursor: text; }
+.rendered.is-editing .mv-atom:hover { background: rgba(31, 95, 168, 0.08); border-radius: 2px; }
+.mv-caret {
+  display: inline-block;
+  width: 0;
+  height: 1.05em;
+  border-left: 1.5px solid var(--accent);
+  margin: 0 -0.75px;
+  animation: mv-blink 1.06s steps(1) infinite;
+}
+@keyframes mv-blink { 50% { opacity: 0; } }
+
+.source.raw { color: var(--error); }
+
+.text-edit {
+  font: inherit;
+  color: inherit;
+  width: 100%;
+  min-height: 1.5em;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: #fff;
+  padding: 1px 3px;
+  resize: none;
+  overflow: hidden;
+}
+
+/* --- resize grip --- */
+.resize {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--accent);
+  background: #fff;
+  border-radius: 2px;
+  cursor: nwse-resize;
+}
+
+@media print {
+  .mv-caret, .resize { display: none !important; }
+}
+
+
+/* --- snap grid --- */
+.content.show-grid {
+  background-image:
+    radial-gradient(rgba(31, 95, 168, 0.22) 0.7px, transparent 0.7px);
+  background-size: var(--grid) var(--grid);
+}
+.format .check { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); }
+.format .check input { margin: 0; }
+
+/* --- page panel groups --- */
+.page-panel .group {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+  background: var(--surface);
+}
+.page-panel .group-title {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.page-panel .group-title .check { text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--ink); }
+.page-panel .check { display: inline-flex; align-items: center; gap: 5px; }
+.page-panel .row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; flex-wrap: wrap; }
+.page-panel .mini { display: flex; flex-direction: column; gap: 2px; }
+.page-panel .mini span { font-size: 10px; color: var(--muted); }
+.page-panel .mini input {
+  width: 52px; font: inherit; font-size: 12px; padding: 2px 4px;
+  border: 1px solid var(--line); border-radius: 3px;
+}
+.page-panel .tokens-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.page-panel .tokens-grid button {
+  font: inherit; font-size: 11px; padding: 4px 2px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 3px; background: var(--surface);
+}
+.page-panel .tokens-grid button:hover { border-color: var(--accent); color: var(--accent); }
+
+
+/* --- dev mode --- */
+.dev-chip {
+  font: 600 10px/1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--surface);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.dev-chip:hover { background: var(--accent); color: #fff; }
+
+/* --- calculation mode --- */
+.calc-mode {
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+}
+.calc-now {
+  font: inherit;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.calc-now.urgent {
+  border-color: var(--blocked);
+  color: #6b5400;
+  background: #fff8e0;
+  font-weight: 600;
+}
+.calc-now:disabled { opacity: 0.45; cursor: default; }
+
+/* Stale results are dimmed and underlined, never silently wrong. The formula
+   stays crisp — it is current; only the value behind it is not. */
+.region.is-stale .mv-result {
+  color: var(--muted);
+  text-decoration: underline dotted currentColor;
+  text-underline-offset: 3px;
+}
+/* Out of date shows through any colour the result was given. */
+.region.is-stale .mv-result .mv-unit { color: var(--muted); }
+.region.is-stale::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--blocked);
+  opacity: 0.55;
+}
+
+.status.has-stale { background: #fff8e0; border-top-color: var(--blocked); }
+.stale-msg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: inherit;
+  color: #6b5400;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.stale-msg:hover { text-decoration: underline; }
+.stale-msg .mark {
+  flex: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--blocked);
+  color: #fff;
+  font: 700 10px/14px system-ui, sans-serif;
+  text-align: center;
+}
+
+@media print {
+  .region.is-stale::before { display: none; }
+}
+
+
+/* --- marquee selection --- */
+.marquee {
+  position: absolute;
+  border: 1px solid var(--accent);
+  background: rgba(31, 95, 168, 0.09);
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+/* --- worksheet cursor ---
+   A crosshair, not a blinking bar: a bar reads as "text goes here" and would
+   compete with the real caret inside a region being edited. This one marks the
+   top-left corner the next region will be placed at, which is why the arms
+   extend right and down from the point rather than centring on it. */
+.worksheet-cursor {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
+  z-index: 2;
+}
+.worksheet-cursor::before,
+.worksheet-cursor::after {
+  content: "";
+  position: absolute;
+  background: var(--accent);
+}
+.worksheet-cursor::before { left: 0; top: 0; width: 15px; height: 1px; }
+.worksheet-cursor::after  { left: 0; top: 0; width: 1px; height: 15px; }
+
+/* --- data table ---
+   Ruled like an engineering table rather than a spreadsheet: no cell borders,
+   a rule under the heading, and right-aligned numbers so a column of figures
+   reads down the decimal point. */
+.table-region table {
+  border-collapse: collapse;
+  background: transparent;
+  /* Content width, not the region's. A three-column table has no business
+     being as wide as the page, and `width: 100%` on the inputs made it so. */
+  width: max-content;
+}
+.table-region th {
+  border-bottom: 1px solid var(--rule, #999);
+  padding: 0 4px 2px;
+  text-align: right;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.table-region td { padding: 0; }
+.table-region input {
+  border: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 1px 4px;
+  text-align: right;
+  /* Sized in characters: a numeric column is a handful of digits wide, and
+     letting each input claim the row instead stacked the name and unit on top
+     of one another. */
+  width: 9ch;
+  box-sizing: content-box;
+  border-radius: 2px;
+}
+.table-region input:hover { border-color: rgba(0, 0, 0, 0.12); }
+.table-region input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+/* Name over unit, two lines, so a heading reads like `span` / `(ft)`. */
+.table-region .col-name,
+.table-region .col-unit { display: block; }
+.table-region .col-name { font-style: italic; }
+.table-region .col-unit {
+  font-size: 0.82em;
+  opacity: 0.75;
+  font-style: normal;
+}
+.table-region .col-unit::placeholder { opacity: 0.4; }
+
+/* Controls are chrome, not content: they stay out of print and out of the way
+   until the region is being worked on. */
+.table-controls {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.region:hover .table-controls,
+.region.is-selected .table-controls { opacity: 1; }
+.table-controls button {
+  font-size: 11px;
+  padding: 1px 6px;
+  line-height: 1.5;
+}
+.table-problem {
+  margin: 3px 0 0;
+  font-size: 11px;
+  color: var(--error, #b3261e);
+}
+
+@media print {
+  .table-controls { display: none !important; }
+  .table-region input {
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+}
+
+/* --- 2-D math editor ---
+   MathLive ships its own menu and virtual-keyboard buttons. They act on LaTeX
+   the document does not keep, so they are hidden rather than left to offer
+   operations that would be discarded on the way back to source. */
+.mathlive-field {
+  /* MathLive's default selection is a solid dark fill, which hides the very
+     notation you are selecting. A pale wash keeps the symbols readable, which
+     matters more here than the highlight standing out: the reason to select
+     something is to look at it. */
+  --selection-background-color: rgba(31, 95, 168, 0.18);
+  --selection-background-color-focused: rgba(31, 95, 168, 0.24);
+  --selection-color: inherit;
+  --contains-highlight-background-color: rgba(31, 95, 168, 0.08);
+  --caret-color: var(--accent);
+  display: inline-block;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  padding: 1px 3px;
+  background: #fff;
+  min-width: 120px;
+}
+.mathlive-field::part(menu-toggle),
+.mathlive-field::part(virtual-keyboard-toggle) { display: none; }
+
+/* --- every problem at once ---
+   The status bar shows one. This is the rest: being told there are four more
+   without being able to see them is worse than not being told, because you
+   know something is wrong and have to go hunting. */
+.problem-list {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  max-height: 42vh;
+  overflow: auto;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.09);
+  z-index: 40;
+}
+.problem-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+.problem-list-head button {
+  border: none;
+  background: none;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 0 4px;
+}
+.problem-list ul { list-style: none; margin: 0; padding: 0; }
+.problem-list li + li { border-top: 1px solid var(--rule-soft); }
+.problem-list li button {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.problem-list li button:hover { background: var(--hover); }
+.problem-list .mark { color: var(--error, #b3261e); font-weight: 700; }
+/* A blocked region is waiting on another, not broken itself. */
+.problem-list .mark.waiting { color: #8a6d00; }
+.problem-list b { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.problem-list .what { flex: 1; }
+.problem-list .where {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 42%;
+}
+
+.problem-more {
+  border: none;
+  background: rgba(179, 38, 30, 0.1);
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 7px;
+  margin-left: 6px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.problem-more:hover, .problem-more.on { background: rgba(179, 38, 30, 0.2); }
+
+@media print { .problem-list { display: none !important; } }
+
+/* --- while a drag is running ---
+   The gesture belongs to the drag. Without this the browser reads the same
+   movement as a text sweep and lights up prose in every box the pointer
+   crosses, which is both distracting and, on release, leaves a selection the
+   user did not ask for. */
+body.is-dragging,
+body.is-dragging * {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+/* The caret stays where it was: a drag must not steal an editing session. */
+body.is-dragging [contenteditable="true"] { user-select: text; -webkit-user-select: text; }
+
+/* --- off the sheet ---
+   The canvas is larger than the paper: somewhere to park a trial calculation
+   or a check. Those regions still compute and still bind names; they simply do
+   not print. Marked, never hidden — a value that silently fails to appear on a
+   submitted sheet is exactly the failure this project exists to avoid. */
+.region.is-offsheet {
+  opacity: 0.62;
+  outline: 1px dashed #b08900;
+  outline-offset: 2px;
+}
+.region.is-offsheet::after {
+  content: "off-sheet";
+  position: absolute;
+  top: -14px;
+  right: 0;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: #8a6d00;
+  pointer-events: none;
+}
+/* Taller than a page: nothing can be done in layout, so it is said out loud.
+   A printed sheet quietly missing its last rows is the failure this marker
+   exists to prevent. */
+.region.is-overflowing {
+  outline: 1px dashed #b3261e;
+  outline-offset: 2px;
+}
+.region.is-overflowing::after {
+  content: "taller than a page";
+  position: absolute;
+  bottom: -14px;
+  right: 0;
+  font-size: 9px;
+  color: #b3261e;
+  pointer-events: none;
+}
+
+@media print {
+  .region.is-overflowing { outline: none; }
+  .region.is-overflowing::after { display: none; }
+}
+
+.offsheet-count {
+  border: none;
+  background: none;
+  font: inherit;
+  color: #8a6d00;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.offsheet-count:hover { text-decoration: underline; }
+
+@media print {
+  /* The page decides what is printed, not the canvas. */
+  .region.is-offsheet { display: none !important; }
+}
+
+/* --- image --- */
+.image-region img { display: block; max-width: 100%; }
+.image-empty {
+  border: 1px dashed #bbb;
+  background: #fff;
+  color: #888;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.image-empty:hover { border-color: var(--accent); color: var(--accent); }
+.image-controls {
+  margin-top: 3px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.region:hover .image-controls,
+.region.is-selected .image-controls { opacity: 1; }
+.image-controls button { font-size: 11px; padding: 1px 6px; }
+.image-note { margin: 3px 0 0; font-size: 11px; color: #8a6d00; }
+
+@media print {
+  .image-controls, .image-note { display: none !important; }
+  /* An empty frame is scaffolding, not content: it must not print as a box. */
+  .image-empty { visibility: hidden; }
+}
+
+/* --- plot ---
+   SVG so it prints at the printer's resolution. Hairlines and a light grid:
+   an engineering chart is read for its values, not admired. */
+.plot-svg { display: block; background: #fff; }
+.plot-frame { fill: none; stroke: #888; stroke-width: 1; }
+.plot-grid { stroke: #e4e4e4; stroke-width: 1; }
+.plot-line { fill: none; stroke-width: 1.5; }
+.plot-tick { font-size: 9px; fill: #444; }
+.plot-axis-label { font-size: 10px; fill: #333; }
+.plot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #bbb;
+  color: #888;
+  font-size: 11px;
+  background: #fff;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 8px;
+}
+.plot-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.region:hover .plot-controls,
+.region.is-selected .plot-controls { opacity: 1; }
+.plot-controls button { font-size: 11px; padding: 1px 6px; }
+.plot-series {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+}
+.plot-series input {
+  width: 7ch;
+  font: inherit;
+  font-style: italic;
+  padding: 1px 3px;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  background: #fff;
+}
+.plot-series input:focus { outline: none; border-color: var(--accent); }
+.plot-series .vs { opacity: 0.6; }
+.plot-problem { margin: 3px 0 0; font-size: 11px; color: var(--error, #b3261e); }
+
+@media print {
+  .plot-controls { display: none !important; }
+}
+
+/* --- page break --- */
+.pagebreak {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 14px;
+  border-top: 1px dashed var(--muted);
+  opacity: 0.75;
+}
+.pagebreak .label {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--paper);
+  padding: 0 5px;
+  margin-top: -1px;
+}
+.pagebreak.is-selected { border-top-color: var(--accent); opacity: 1; }
+.pagebreak.is-selected .label { color: var(--accent); }
+.pagebreak .handle { height: 12px; min-height: 12px; }
+
+/* An empty region still needs a target to click. */
+.region.is-empty { min-width: 78px; min-height: 18px; }
+.region .placeholder { color: var(--line); font-style: italic; }
+
+/* --- print ---
+   Each page is its own sheet of paper. `break-after` on every page but the
+   last avoids the trailing blank page that `page-break-after: always` leaves. */
+@media print {
+  .canvas { display: block; padding: 0; gap: 0; }
+  .page { box-shadow: none; margin: 0; }
+  .page + .page { break-before: page; page-break-before: always; }
+  .marquee, .pagebreak, .worksheet-cursor { display: none !important; }
+  /* A page that exists only to hold the cursor is not a sheet of paper. */
+  .page.is-cursor-only { display: none !important; }
+}
+
+/* --- rich text editing ---
+   The editor is a contentEditable, so it needs the same metrics as the
+   rendered form or text jumps when an edit starts. */
+.text-edit {
+  display: block;
+  min-width: 60px;
+  font: inherit;
+  color: inherit;
+  outline: 1px solid var(--accent);
+  border-radius: 2px;
+  background: #fff;
+  padding: 0 2px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.text-edit ::selection { background: rgba(31, 95, 168, 0.24); }
+
+
+/* --- matrices ---
+   Brackets are drawn as borders so they stretch to the height of the grid,
+   which is what makes a matrix read as one object rather than as punctuation
+   around some numbers. */
+.mv-matrix {
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+  margin: 0 0.15em;
+}
+.mv-bracket {
+  width: 0.28em;
+  border: 1.2px solid currentColor;
+  align-self: stretch;
+}
+.mv-bracket-l { border-right: none; }
+.mv-bracket-r { border-left: none; }
+.mv-grid {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0.12em 0.3em;
+  gap: 0.1em;
+}
+.mv-row { display: flex; gap: 0.75em; justify-content: flex-end; }
+.mv-cell { display: inline-flex; justify-content: flex-end; }
+.mv-index { font-size: 0.62em; font-style: normal; vertical-align: -0.25em; }
+.mv-index-bracket { font-style: normal; padding: 0 0.04em; }
+
+/* --- unit picker --- */
+.unit-hit {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  left: auto;
+  width: 34%;
+  min-width: 30px;
+}
+.unit-picker {
+  position: fixed;
+  z-index: 40;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  padding: 8px;
+  max-width: 260px;
+}
+.unit-picker .head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.unit-picker .options { display: flex; flex-wrap: wrap; gap: 4px; }
+.unit-picker .options button {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.unit-picker .options button:hover { border-color: var(--accent); color: var(--accent); }
+.unit-picker .options button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.unit-picker .clear {
+  margin-top: 8px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.unit-picker .clear:hover { color: var(--accent); }
+.unit-picker .empty { font-size: 12px; color: var(--muted); }
+
+.autosave {
+  color: var(--muted);
+  font-size: 11px;
+  min-width: 96px;
+  padding-left: 8px;
+}
+.autosave.warn { color: var(--error); font-weight: 600; }
+
+/* --- the crash panel ---
+   Plain and calm. Someone reading this has just watched their work vanish and
+   needs two facts: it is saved, and this is our fault, not theirs. */
+.crash {
+  max-width: 520px;
+  margin: 12vh auto;
+  padding: 24px 28px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #222;
+}
+.crash h1 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.crash .what {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #b3261e;
+  background: #fbf3f3;
+  border: 1px solid #f0d9d9;
+  border-radius: 3px;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+}
+.crash .actions { display: flex; gap: 8px; margin: 18px 0 0; }
+.crash .actions button {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.crash .actions button:first-child {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.crash .note { color: var(--muted); font-size: 12px; margin-top: 18px; }
+
+/* --- workspace: shared slots, panes and tabs --- */
+
+/* The shared slots take no box of their own: what the focused sheet draws into
+   them lays out as though it were a direct child of the window. */
+.slot { display: contents; }
+
+.panes { flex: 1; display: flex; min-width: 0; min-height: 0; }
+.pane {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line);
+}
+.pane:first-child { border-left: none; }
+.pane-body { position: relative; flex: 1; min-height: 0; display: flex; }
+.pane-host { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+/* A sheet behind another tab is kept, not drawn. */
+.canvas[hidden] { display: none; }
+
+.tabbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 34px;
+  padding: 5px 6px 0;
+  background: var(--chrome-2);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.tabbar-rest { flex: 1; align-self: stretch; }
+.tab {
+  position: relative;
+  top: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 220px;
+  padding: 5px 4px 6px 12px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.tab:hover { background: var(--hover); color: var(--ink); }
+.tab.is-active { background: var(--surface); border-color: var(--line); color: var(--ink); }
+/* The pane the keyboard is talking to: its front tab carries the accent. */
+.pane.is-focused .tab.is-active { box-shadow: inset 0 2px 0 var(--accent); }
+.tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab-close {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.tab-close > * { grid-area: 1 / 1; }
+.tab-close:hover { background: var(--hover); color: var(--ink); }
+/* Unsaved shows as a dot where the close button sits, and the dot turns into
+   the close button under the pointer: visible at a glance, still closable. */
+.tab-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; visibility: hidden; }
+.tab-x { font-size: 14px; visibility: hidden; }
+.tab:hover .tab-x,
+.tab.is-active:not(.is-dirty) .tab-x { visibility: visible; }
+.tab.is-dirty .tab-dot { visibility: visible; }
+.tab.is-dirty:hover .tab-dot { visibility: hidden; }
+.tab.drop-before { box-shadow: inset 2px 0 0 var(--accent); }
+.tab.drop-after { box-shadow: inset -2px 0 0 var(--accent); }
+.tabbar-split {
+  align-self: center;
+  margin: 0 2px 4px;
+  padding: 3px 5px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  line-height: 0;
+  cursor: pointer;
+}
+.tabbar-split:hover:not(:disabled) { border-color: var(--line); background: var(--surface); color: var(--ink); }
+.tabbar-split:disabled { opacity: 0.35; cursor: default; }
+
+/* Where a dragged tab will land: the outer quarters split, the middle joins. */
+.pane-drop { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+.pane-drop.is-left { background: linear-gradient(to right, rgba(31, 95, 168, 0.16) 0 50%, transparent 50%); }
+.pane-drop.is-right { background: linear-gradient(to left, rgba(31, 95, 168, 0.16) 0 50%, transparent 50%); }
+.pane-drop.is-center {
+  background: rgba(31, 95, 168, 0.08);
+  outline: 2px solid rgba(31, 95, 168, 0.35);
+  outline-offset: -2px;
+}
+
+/* --- home --- */
+.home { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 56px 24px; }
+.home-inner { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 28px; }
+.home-head h1 { margin: 0; font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
+.home-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.home-primary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.home-primary:hover { border-color: var(--accent); }
+.home-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--trace);
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+}
+.home-label { display: flex; flex-direction: column; gap: 2px; }
+.home-label small,
+.home-item-text small,
+.home-recent small { color: var(--muted); font-size: 12px; }
+.home-section h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.home-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.home-section li + li { border-top: 1px solid var(--rule-soft); }
+/* Unsaved work is the one thing here that is at risk; it is marked as such. */
+.home-unsaved ul { border-left: 3px solid var(--blocked); }
+.home-unsaved li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.home-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.home-item-text small,
+.home-recent small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-item-actions { display: flex; gap: 6px; }
+.home-item-actions button {
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.home-item-actions button:first-child { border-color: var(--accent); color: var(--accent); }
+.home-item-actions button.quiet { color: var(--muted); }
+.home-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.home-recent:hover { background: var(--hover); }
+.home-empty { margin: 0; font-size: 12px; color: var(--muted); }
+.home-foot { display: flex; justify-content: flex-end; align-items: center; color: var(--muted); }
+.home-version { margin-right: auto; font-size: 12px; }
+
+@media print {
+  /* Only the sheet being worked in prints: never the tabs, another pane, the
+     format bar or the home screen. */
+  .tabbar, .home, .pane-drop, .format, .pane:not(.is-focused) { display: none !important; }
+  .app, .body, .panes, .pane, .pane-body, .pane-host {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+  }
+}
+
+/* --- header and footer templates --- */
+.menu-panel .template-row { gap: 2px; padding: 0 4px; }
+.menu-panel .template-row .template-apply { flex: 1; min-width: 140px; }
+.menu-panel .template-row .template-star,
+.menu-panel .template-row .template-more { width: 26px; justify-content: center; color: var(--muted); }
+.menu-panel .template-row .template-star.on { color: var(--accent); }
+.menu-panel .menu-note { display: block; padding: 5px 10px; font-size: 12px; color: var(--muted); }
+
+/* A sheet saved by a newer version: said once, above the first page. */
+.sheet-notice {
+  display: flex; align-items: center; gap: 12px;
+  max-width: 816px; margin: 0 auto 12px; padding: 8px 12px;
+  font-size: 12px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--blocked); border-left-width: 4px; border-radius: 4px;
+}
+.sheet-notice button { font: inherit; padding: 2px 12px; cursor: pointer; }
+@media print { .sheet-notice { display: none !important; } }
+
+/* A listed value: click to choose the unit it is listed in. */
+.symbols td.val .val-unit {
+  font: inherit; color: inherit; text-align: right;
+  padding: 0; border: none; border-bottom: 1px dotted transparent; background: none;
+  cursor: pointer;
+}
+.symbols td.val .val-unit:hover { border-bottom-color: currentColor; }
+.symbols td.val .val-unit.is-chosen { border-bottom-color: var(--line); }
