@@ -35,5 +35,7 @@
     "vite": "^8.2.2",
     "vitest": "^5.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://pookpookaman.github.io/jamCalc/",
+  "repository": { "type": "git", "url": "git+https://github.com/pookpookaman/jamCalc.git" }
 }

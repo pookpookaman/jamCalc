@@ -3,6 +3,7 @@
   "productName": "jamCalc",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://github.com/pookpookaman/jamCalc/blob/main/docs/README.md",
   "description": "Electron shell (ADR-0010). Hosts the studio; owns the window, the menus and, later, the files.",
   "main": "dist/main.js",
   "scripts": {

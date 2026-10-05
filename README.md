@@ -35,10 +35,10 @@ feedback on, not yet for calculations you seal. See
 ## Get it
 
 **Windows:** download the installer, or the portable app that runs without
-installing, from this repository's Releases page.
+installing, from the [Releases page](https://github.com/pookpookaman/jamCalc/releases).
 
-**In a browser:** the same app, with nothing to install, at this repository's
-website (linked at the top of the repository page). Use Chrome or Edge. It
+**In a browser:** the same app, with nothing to install, at
+**[pookpookaman.github.io/jamCalc](https://pookpookaman.github.io/jamCalc/)**. Use Chrome or Edge. It
 runs entirely in your browser: sheets are opened from and saved to your own
 computer, and never uploaded.
 

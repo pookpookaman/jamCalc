@@ -10,7 +10,7 @@ it protected your PC from an unrecognised app. Choose **More info**, then
 **Run anyway**. If your organisation blocks unsigned programs, ask IT, or use
 the portable app where that is allowed.
 
-**In a browser:** open jamCalc's website in Chrome or Edge. Other browsers
+**In a browser:** open [jamCalc's website](https://pookpookaman.github.io/jamCalc/) in Chrome or Edge. Other browsers
 work but may not print at the sheet's own paper size. Nothing is uploaded:
 **Open…** reads a file from your computer and **Save** downloads one.
 
