@@ -14,11 +14,17 @@ import { useEffect, useRef, useState, type JSX, type ReactNode } from "react";
 export interface MenuButtonProps {
   readonly label: string;
   readonly title?: string | undefined;
+  /**
+   * Which edge of the button the menu lines up with. "right" suits a button
+   * near the right of the window; "left" one near the left, where a menu
+   * opening leftwards would run off the screen.
+   */
+  readonly align?: "left" | "right";
   /** Given a function that closes the menu, so an item can close it. */
   readonly children: (close: () => void) => ReactNode;
 }
 
-export function MenuButton({ label, title, children }: MenuButtonProps): JSX.Element {
+export function MenuButton({ label, title, align = "right", children }: MenuButtonProps): JSX.Element {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -53,7 +59,9 @@ export function MenuButton({ label, title, children }: MenuButtonProps): JSX.Ele
           ▾
         </span>
       </button>
-      {open ? <div className="menu-panel">{children(() => setOpen(false))}</div> : null}
+      {open ? (
+        <div className={align === "left" ? "menu-panel align-left" : "menu-panel"}>{children(() => setOpen(false))}</div>
+      ) : null}
     </div>
   );
 }

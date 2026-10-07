@@ -1262,140 +1262,145 @@ Export anyway?`,
               */}
               <style>{`@page { size: ${doc.page.size} ${doc.page.orientation}; margin: 0; }`}</style>
               <header className="toolbar">
-                <input className="title" value={doc.title} onChange={(e) => sheet.setTitle(e.target.value)} />
-                <span className={`autosave ${kept.note ? "warn" : ""}`} title={kept.note ?? undefined}>
-                  {kept.note ? "unsaved — no copy kept" : dirty ? "unsaved changes" : path ? "saved" : ""}
-                </span>
-                <div className="spacer" />
-                <button disabled={!sheet.canUndo} onClick={sheet.undo} title="Undo (Ctrl+Z)">↶</button>
-                <button disabled={!sheet.canRedo} onClick={sheet.redo} title="Redo (Ctrl+Shift+Z)">↷</button>
-                <span className="divider" />
-                {/* Everything that goes on a sheet, in one place, each with the key
-                    that does the same thing. A shortcut spelled out somewhere else is
-                    a shortcut nobody finds. */}
-                <MenuButton label="Insert" title="insert a region">
-                  {(close) => (
-                    <>
-                      <button onClick={() => { addAt("math"); close(); }}>
-                        Math <kbd>M</kbd>
-                      </button>
-                      <button onClick={() => { addAt("text"); close(); }}>
-                        Text <kbd>T</kbd>
-                      </button>
-                      <button onClick={() => { addAt("table"); close(); }}>
-                        Data table <kbd>D</kbd>
-                      </button>
-                      <button onClick={() => { addAt("plot"); close(); }}>
-                        Plot <kbd>P</kbd>
-                      </button>
-                      <button onClick={() => { addAt("pagebreak"); close(); }}>
-                        Page break <kbd>B</kbd>
-                      </button>
-                    </>
-                  )}
-                </MenuButton>
-                <button
-                  disabled={selection.size === 0}
-                  onClick={() => {
-                    sheet.removeRegions(selection);
-                    setSelection(new Set());
-                  }}
-                >
-                  Delete{selection.size > 1 ? ` (${selection.size})` : ""}
-                </button>
-                <span className="divider" />
-                <select
-                  className="calc-mode"
-                  value={sheet.autoCalc ? "auto" : "manual"}
-                  onChange={(e) => sheet.setAuto(e.target.value === "auto")}
-                >
-                  <option value="auto">Auto calc</option>
-                  <option value="manual">Manual calc</option>
-                </select>
-                <button
-                  className={staleCount > 0 ? "calc-now urgent" : "calc-now"}
-                  disabled={staleCount === 0}
-                  onClick={sheet.calculateNow}
-                  title="Recalculate (F9)"
-                >
-                  {staleCount > 0 ? `Calculate (${staleCount})` : "Calculate"}
-                </button>
-                <span className="divider" />
-                <MenuButton label="Options" title="panels, snap, grid and editor options">
-                  {(close) => (
-                    <>
-                      <button onClick={() => { openTab("symbols"); close(); }}>Values panel</button>
-                      <button onClick={() => { openTab("page"); close(); }}>Page setup</button>
-                      <button onClick={() => { close(); startBandEditing(); }}>Header and footer</button>
-                      <span className="menu-rule" />
-                      <label className="menu-row">
-                        <span>Snap</span>
-                        <select value={grid} onChange={(e) => setGrid(Number(e.target.value))}>
-                          {SNAP_STEPS.map((g) => (
-                            <option key={g} value={g}>{g === 0 ? "off" : `${g} px`}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="menu-row check">
-                        <input
-                          type="checkbox"
-                          checked={showGrid}
-                          onChange={(e) => setShowGrid(e.target.checked)}
-                        />
-                        <span>Show grid</span>
-                      </label>
-                      <label className="menu-row check" title="line regions up with each other as they are dragged">
-                        <input
-                          type="checkbox"
-                          checked={alignOn}
-                          onChange={(e) => setAlignOn(e.target.checked)}
-                        />
-                        <span>Snap to objects</span>
-                      </label>
-                      <span className="menu-rule" />
-                      <label
-                        className="menu-row check"
-                        title="dark surroundings; the page itself stays white, as it prints"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={theme === "dark"}
-                          onChange={(e) => setTheme(e.target.checked ? "dark" : "light")}
-                        />
-                        <span>Dark theme</span>
-                      </label>
-                      {/* The plain-text editor is deprecated and on its way out. It
-                          stays reachable in developer mode as a way out if the
-                          structured editor ever misbehaves on a real sheet. */}
-                      {dev ? (
+                <div className="toolbar-row">
+                  <input className="title" value={doc.title} onChange={(e) => sheet.setTitle(e.target.value)} />
+                  <span className={`autosave ${kept.note ? "warn" : ""}`} title={kept.note ?? undefined}>
+                    {kept.note ? "unsaved — no copy kept" : dirty ? "unsaved changes" : path ? "saved" : ""}
+                  </span>
+                </div>
+                {/* Every action on its own row under the title, from the left: history,
+                    the file, what goes on the sheet, calculation, then options. */}
+                <div className="toolbar-row">
+                  <button disabled={!sheet.canUndo} onClick={sheet.undo} title="Undo (Ctrl+Z)">↶</button>
+                  <button disabled={!sheet.canRedo} onClick={sheet.redo} title="Redo (Ctrl+Shift+Z)">↷</button>
+                  <span className="divider" />
+                  <MenuButton label="File" title="new, open and save" align="left">
+                    {(close) => (
+                      <>
+                        <button onClick={() => { close(); onNewSheet(); }}>New sheet</button>
+                        <button onClick={() => { close(); onOpen(); }}>Open…</button>
+                        <button onClick={() => { close(); void saveSheet(); }}>Save</button>
+                        {inDesktop() ? (
+                          <button onClick={() => { close(); void saveSheet(true); }}>Save as…</button>
+                        ) : null}
+                        <button onClick={() => { close(); printSheet(); }}>Print…</button>
+                      </>
+                    )}
+                  </MenuButton>
+                  {/* Everything that goes on a sheet, in one place, each with the key
+                      that does the same thing. A shortcut spelled out somewhere else is
+                      a shortcut nobody finds. */}
+                  <MenuButton label="Insert" title="insert a region" align="left">
+                    {(close) => (
+                      <>
+                        <button onClick={() => { addAt("math"); close(); }}>
+                          Math <kbd>M</kbd>
+                        </button>
+                        <button onClick={() => { addAt("text"); close(); }}>
+                          Text <kbd>T</kbd>
+                        </button>
+                        <button onClick={() => { addAt("table"); close(); }}>
+                          Data table <kbd>D</kbd>
+                        </button>
+                        <button onClick={() => { addAt("plot"); close(); }}>
+                          Plot <kbd>P</kbd>
+                        </button>
+                        <button onClick={() => { addAt("pagebreak"); close(); }}>
+                          Page break <kbd>B</kbd>
+                        </button>
+                      </>
+                    )}
+                  </MenuButton>
+                  <button
+                    disabled={selection.size === 0}
+                    onClick={() => {
+                      sheet.removeRegions(selection);
+                      setSelection(new Set());
+                    }}
+                  >
+                    Delete{selection.size > 1 ? ` (${selection.size})` : ""}
+                  </button>
+                  <span className="divider" />
+                  <select
+                    className="calc-mode"
+                    value={sheet.autoCalc ? "auto" : "manual"}
+                    onChange={(e) => sheet.setAuto(e.target.value === "auto")}
+                  >
+                    <option value="auto">Auto calc</option>
+                    <option value="manual">Manual calc</option>
+                  </select>
+                  <button
+                    className={staleCount > 0 ? "calc-now urgent" : "calc-now"}
+                    disabled={staleCount === 0}
+                    onClick={sheet.calculateNow}
+                    title="Recalculate (F9)"
+                  >
+                    {staleCount > 0 ? `Calculate (${staleCount})` : "Calculate"}
+                  </button>
+                  <span className="divider" />
+                  <MenuButton label="Options" title="panels, snap, grid and editor options" align="left">
+                    {(close) => (
+                      <>
+                        <button onClick={() => { openTab("symbols"); close(); }}>Values panel</button>
+                        <button onClick={() => { openTab("page"); close(); }}>Page setup</button>
+                        <button onClick={() => { close(); startBandEditing(); }}>Header and footer</button>
+                        <span className="menu-rule" />
+                        <label className="menu-row">
+                          <span>Snap</span>
+                          <select value={grid} onChange={(e) => setGrid(Number(e.target.value))}>
+                            {SNAP_STEPS.map((g) => (
+                              <option key={g} value={g}>{g === 0 ? "off" : `${g} px`}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="menu-row check">
+                          <input
+                            type="checkbox"
+                            checked={showGrid}
+                            onChange={(e) => setShowGrid(e.target.checked)}
+                          />
+                          <span>Show grid</span>
+                        </label>
+                        <label className="menu-row check" title="line regions up with each other as they are dragged">
+                          <input
+                            type="checkbox"
+                            checked={alignOn}
+                            onChange={(e) => setAlignOn(e.target.checked)}
+                          />
+                          <span>Snap to objects</span>
+                        </label>
+                        <span className="menu-rule" />
                         <label
                           className="menu-row check"
-                          title="fall back to the plain-text editor (deprecated, for diagnosis only)"
+                          title="dark surroundings; the page itself stays white, as it prints"
                         >
                           <input
                             type="checkbox"
-                            checked={mathLive}
-                            onChange={(e) => setMathLive(e.target.checked)}
+                            checked={theme === "dark"}
+                            onChange={(e) => setTheme(e.target.checked ? "dark" : "light")}
                           />
-                          <span>2-D math editor</span>
+                          <span>Dark theme</span>
                         </label>
-                      ) : null}
-                    </>
-                  )}
-                </MenuButton>
-                <MenuButton label="File" title="new, open and save">
-                  {(close) => (
-                    <>
-                      <button onClick={() => { close(); onNewSheet(); }}>New sheet</button>
-                      <button onClick={() => { close(); onOpen(); }}>Open…</button>
-                      <button onClick={() => { close(); void saveSheet(); }}>Save</button>
-                      {inDesktop() ? (
-                        <button onClick={() => { close(); void saveSheet(true); }}>Save as…</button>
-                      ) : null}
-                      <button onClick={() => { close(); printSheet(); }}>Print…</button>
-                    </>
-                  )}
-                </MenuButton>
+                        {/* The plain-text editor is deprecated and on its way out. It
+                            stays reachable in developer mode as a way out if the
+                            structured editor ever misbehaves on a real sheet. */}
+                        {dev ? (
+                          <label
+                            className="menu-row check"
+                            title="fall back to the plain-text editor (deprecated, for diagnosis only)"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={mathLive}
+                              onChange={(e) => setMathLive(e.target.checked)}
+                            />
+                            <span>2-D math editor</span>
+                          </label>
+                        ) : null}
+                      </>
+                    )}
+                  </MenuButton>
+                </div>
               </header>
 
               {/* Contextual. With nothing selected there is nothing to say, and a bar
