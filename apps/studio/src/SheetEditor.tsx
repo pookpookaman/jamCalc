@@ -58,6 +58,7 @@ import { addItem, moveItem, nextFreeSpot, removeItem, type NewItem } from "./ban
 import { VERSION } from "./product.js";
 import { MenuButton } from "./MenuButton.js";
 import { SheetSettings } from "./SheetSettings.js";
+import { copyRegions, readCopied, REGIONS_TYPE } from "./clipboard.js";
 import { alignSnap, type Box, type Guide } from "./alignSnap.js";
 import { ImageRegionBody } from "./ImageRegionBody.js";
 import { PlotRegionBody } from "./PlotRegionBody.js";
@@ -464,13 +465,22 @@ export function SheetEditor({
 
   // --- pointer handling ----------------------------------------------------
 
+  /**
+   * The region a Shift- or Ctrl-press just added to the selection. The click
+   * that ends the same press must not toggle it straight back out.
+   */
+  const addedOnPress = useRef<RegionId | null>(null);
+
   const startMove = useCallback(
     (e: React.PointerEvent, id: RegionId, started = true) => {
       e.stopPropagation();
       const additive = e.shiftKey || e.metaKey || e.ctrlKey;
       // Dragging a member of a multi-selection moves the whole group.
       const ids = selection.has(id) && !additive ? [...selection] : [id];
-      if (!selection.has(id)) select(id, additive);
+      if (!selection.has(id)) {
+        select(id, additive);
+        addedOnPress.current = additive ? id : null;
+      }
       const origin = new Map<RegionId, Position>();
       for (const r of doc.regions) if (ids.includes(r.id)) origin.set(r.id, r.position);
       const next: Drag = {
@@ -915,6 +925,53 @@ export function SheetEditor({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [sheet, selection, addAt, focused, bandEditing, bandSelection, doc.page, box.width, margins, stopBandEditing]);
+
+  /**
+   * Copy, cut and paste of whole regions.
+   *
+   * The clipboard events rather than the keys: Ctrl+C, the desktop app's Edit
+   * menu and a browser's own menu all arrive as these. Anything being typed
+   * into keeps the ordinary behaviour — copying a word out of a region must
+   * not copy the region — and with no region selected, so does a copy.
+   */
+  useEffect(() => {
+    if (!focused || bandEditing) return;
+    const busy = (target: EventTarget | null): boolean => {
+      const t = target as HTMLElement | null;
+      return t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || t?.tagName === "MATH-FIELD" || t?.isContentEditable === true;
+    };
+    const onCopy = (e: ClipboardEvent) => {
+      if (busy(e.target) || editing !== null || selection.size === 0 || !e.clipboardData) return;
+      const { json, text } = copyRegions(
+        doc.regions.filter((r) => selection.has(r.id)),
+        (id) => sheet.runs.get(id),
+      );
+      e.clipboardData.setData(REGIONS_TYPE, json);
+      e.clipboardData.setData("text/plain", text);
+      e.preventDefault();
+      if (e.type === "cut") {
+        sheet.removeRegions(selection);
+        setSelection(new Set());
+      }
+    };
+    const onPaste = (e: ClipboardEvent) => {
+      if (busy(e.target) || editing !== null) return;
+      const copied = readCopied(e.clipboardData?.getData(REGIONS_TYPE) ?? "");
+      if (!copied) return;
+      e.preventDefault();
+      // Where the next thing goes: the insertion point, as for a new region.
+      const ids = sheet.pasteRegions(copied, { x: snap(cursor.x, grid), y: snap(cursor.y, grid) });
+      if (ids.length > 0) setSelection(new Set(ids));
+    };
+    document.addEventListener("copy", onCopy);
+    document.addEventListener("cut", onCopy);
+    document.addEventListener("paste", onPaste);
+    return () => {
+      document.removeEventListener("copy", onCopy);
+      document.removeEventListener("cut", onCopy);
+      document.removeEventListener("paste", onPaste);
+    };
+  }, [focused, bandEditing, editing, selection, doc.regions, sheet, cursor, grid]);
 
   const printSheet = useCallback(() => {
     if (
@@ -1774,7 +1831,12 @@ Export anyway?`,
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            select(region.id, e.shiftKey || e.metaKey || e.ctrlKey);
+                            const additive = e.shiftKey || e.metaKey || e.ctrlKey;
+                            if (additive && addedOnPress.current === region.id) {
+                              addedOnPress.current = null;
+                              return;
+                            }
+                            select(region.id, additive);
                           }}
                         >
                           {/* The edge is the handle: a band along each side that

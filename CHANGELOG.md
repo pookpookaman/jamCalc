@@ -24,12 +24,22 @@ test, so a change cannot ship without being written down here.
   decimals, and normal, scientific or engineering notation; the size of maths
   and text, the font of text, and whether text starts bold.
 - The toolbar's actions sit on their own row under the sheet's title.
+- **Copy, cut and paste regions** with Ctrl+C, Ctrl+X and Ctrl+V, or the Edit
+  menu: whole regions, with their look, size and format, pasted at the cursor
+  in the same sheet or another. Pasted into an email or a document, a copy
+  reads as the regions do on the page.
 
 ### Changed
 
 - The text projection and `calc` reports show numbers in the sheet's number
   format, as the page always did.
 - The Format bar's **B** shows text as bold when it is drawn bold.
+
+### Fixed
+
+- **Shift**- or **Ctrl**-clicking a region now adds it to the selection. It
+  used to add it and take it straight back out, and on a math region it
+  opened the editor instead.
 
 ## 0.1.0 — first preview
 

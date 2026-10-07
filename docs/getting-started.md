@@ -67,9 +67,10 @@ matrices, plots, solvers, and every error message.
 | Insert menu | tables (**D**), plots (**P**), page breaks (**B**); drop a picture onto the page to add it |
 | Click a region | edit it in place |
 | Drag a region | from anywhere on it; a click that does not move never drags |
-| Drag on blank paper | select several; **Shift**-click adds to the selection |
+| Drag on blank paper | select several; **Shift**- or **Ctrl**-click adds to the selection, or takes a region out of it |
 | Bottom-right handle | resize: text wraps, math does not |
 | **Delete** | remove what is selected |
+| **Ctrl+C** / **Ctrl+X** / **Ctrl+V** | copy / cut the selected regions; paste them at the cursor, in this sheet or another |
 | **Ctrl+Z** / **Ctrl+Shift+Z** | undo / redo |
 | **Esc** | stop editing |
 | Click a result | choose the unit it is shown in |
@@ -148,6 +149,7 @@ closes a tab.
 | **Ctrl+P** | print |
 | **Ctrl+W** | close tab (on Windows) |
 | **Ctrl+Z** / **Ctrl+Shift+Z** | undo / redo |
+| **Ctrl+C** / **Ctrl+X** / **Ctrl+V** | copy / cut / paste regions |
 | **M**, **T**, **D**, **P**, **B** | math, text, table, plot, page break |
 | **F9** | recalculate |
 | **Esc** | stop editing |

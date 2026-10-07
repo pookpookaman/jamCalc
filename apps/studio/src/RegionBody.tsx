@@ -87,10 +87,13 @@ export function RegionBody({
   }, []);
 
   // --- math regions ---------------------------------------------------------
+  /** Shift or Ctrl held: the click selects alongside, and opens nothing. */
+  const addsToSelection = (e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }): boolean =>
+    e.shiftKey || e.ctrlKey || e.metaKey;
   if (region.source === "" && !editing) {
     // A box that has never been typed in: a target to click, not an error.
     return (
-      <span className="rendered" onClick={onStartEdit}>
+      <span className="rendered" onClick={(e) => { if (!addsToSelection(e)) onStartEdit(); }}>
         <span className="placeholder">a := b…</span>
       </span>
     );
@@ -131,11 +134,12 @@ export function RegionBody({
   return (
     <span
       className={`rendered ${editing ? "is-editing" : ""}`}
-      onClick={() => {
+      onClick={(e) => {
         // Straight into editing. Dragging now lives on the grip alone, so a
-        // click in the box can only ever mean "put the caret here".
+        // click in the box can only ever mean "put the caret here" — unless
+        // Shift or Ctrl is held, which adds the region to the selection.
         if (editing) inputRef.current?.focus();
-        else onStartEdit();
+        else if (!addsToSelection(e)) onStartEdit();
       }}
     >
       {rendered}

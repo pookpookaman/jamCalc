@@ -188,7 +188,10 @@ export function TextRegionBody({
     return (
       <span
         className="text"
-        onClick={onStartEdit}
+        // Shift or Ctrl held adds the region to the selection instead.
+        onClick={(e) => {
+          if (!(e.shiftKey || e.ctrlKey || e.metaKey)) onStartEdit();
+        }}
         {...(align ? { style: { textAlign: align, display: "block" } } : {})}
       >
         {runs.length === 0 ? (

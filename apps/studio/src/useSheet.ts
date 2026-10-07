@@ -44,6 +44,7 @@ import {
   type TitleBlock,
 } from "@jamcalc/engine";
 import { applyStyleToRange, runsFromText } from "@jamcalc/engine";
+import { pasteOperations, type Copied } from "./clipboard.js";
 
 
 
@@ -394,6 +395,18 @@ export function useSheet(initial?: Sheet | null) {
     [sheet, patch],
   );
 
+  /**
+   * Regions from the clipboard, their top-left at `at`: one patch, so one
+   * undo step. Returns the new ids, or none when the patch was refused.
+   */
+  const pasteRegions = useCallback(
+    (copied: Copied, at: Position): RegionId[] => {
+      const { operations, ids } = pasteOperations(copied, at, sheet.regions.map((r) => r.id));
+      return patch(operations) ? ids : [];
+    },
+    [sheet, patch],
+  );
+
   const removeRegions = useCallback(
     (ids: Iterable<RegionId>) => {
       patch([...new Set(ids)].map((id) => ({ op: "delete" as const, id })));
@@ -622,6 +635,7 @@ export function useSheet(initial?: Sheet | null) {
     resizeRegion,
     addRegion,
     addImage,
+    pasteRegions,
     removeRegions,
     styleRegions,
     setPage,
