@@ -97,6 +97,7 @@ export function useSheet(initial?: Sheet | null) {
 
   if (wsRef.current === null) {
     wsRef.current = new Worksheet(sheet.regions);
+    wsRef.current.setDisplay({ format: sheet.format, units: sheet.units });
     statsRef.current = wsRef.current.recompute();
   }
 
@@ -114,6 +115,7 @@ export function useSheet(initial?: Sheet | null) {
   const reload = useCallback(
     (next: Sheet) => {
       wsRef.current = new Worksheet(next.regions);
+      wsRef.current.setDisplay({ format: next.format, units: next.units });
       statsRef.current = wsRef.current.recompute();
       setSheet(next);
       bump();
@@ -293,6 +295,11 @@ export function useSheet(initial?: Sheet | null) {
         }
       }
 
+      // The sheet's units and numbers are what prose quotes values in.
+      if (result.sheet.format !== sheet.format || result.sheet.units !== sheet.units) {
+        ws.setDisplay({ format: result.sheet.format, units: result.sheet.units });
+      }
+
       commit(result.sheet, tag);
       return result;
     },
@@ -465,6 +472,22 @@ export function useSheet(initial?: Sheet | null) {
     [patch],
   );
 
+  /** The sheet's units (ADR-0017); a field given `null` goes back to its default. */
+  const setSheetUnits = useCallback(
+    (units: Extract<PatchOperation, { op: "configure" }>["units"] & object) => {
+      patch([{ op: "configure", units }]);
+    },
+    [patch],
+  );
+
+  /** The sheet's default text and maths style (ADR-0017). */
+  const setTextStyle = useCallback(
+    (textStyle: Extract<PatchOperation, { op: "configure" }>["textStyle"] & object) => {
+      patch([{ op: "configure", textStyle }]);
+    },
+    [patch],
+  );
+
   const setRegionFormat = useCallback(
     (ids: Iterable<RegionId>, format: NumberFormatPatch) => {
       patch([...new Set(ids)].map((id) => ({ op: "update" as const, id, format })));
@@ -609,6 +632,8 @@ export function useSheet(initial?: Sheet | null) {
     setTitle,
     setTitleBlock,
     setSheetFormat,
+    setSheetUnits,
+    setTextStyle,
     setRegionFormat,
     setUnit,
     reset,

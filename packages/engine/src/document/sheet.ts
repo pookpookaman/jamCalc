@@ -9,7 +9,15 @@
 
 import type { Region, RegionId } from "./region.js";
 import { runsFromText } from "./text.js";
-import type { NumberFormat } from "./format.js";
+import { readNumberFormat, type NumberFormat } from "./format.js";
+import {
+  readSheetTextStyle,
+  readSheetUnits,
+  sortedSheetUnits,
+  sortedTextStyle,
+  type SheetTextStyle,
+} from "./settings.js";
+import type { SheetUnits } from "../units/prefer.js";
 import { migrateRaw } from "./migrate.js";
 import { PAGE_SIZES, SCHEMA_VERSION, SheetFormatError } from "./schema.js";
 import {
@@ -116,6 +124,10 @@ export interface Sheet {
   readonly valueUnits?: Readonly<Record<string, string>>;
   /** Default number format; a region may override it. */
   readonly format?: NumberFormat;
+  /** Units a result is shown in when its region names none (ADR-0017). */
+  readonly units?: SheetUnits;
+  /** Default size, weight and font of regions that set none (ADR-0017). */
+  readonly textStyle?: SheetTextStyle;
   readonly regions: readonly Region[];
   readonly changeLog: readonly ChangeEntry[];
 }
@@ -237,6 +249,10 @@ export function serializeSheet(sheet: Sheet): string {
         : {}),
       ...(sheet.format && Object.keys(sheet.format).length > 0
         ? { format: sheet.format }
+        : {}),
+      ...(sheet.units && Object.keys(sheet.units).length > 0 ? { units: sortedSheetUnits(sheet.units) } : {}),
+      ...(sheet.textStyle && Object.keys(sheet.textStyle).length > 0
+        ? { textStyle: sortedTextStyle(sheet.textStyle) }
         : {}),
       page: {
         size: sheet.page.size,
@@ -398,9 +414,18 @@ export function parseSheet(json: string): Sheet {
       const units = readValueUnits(o["valueUnits"]);
       return units ? { valueUnits: units } : {};
     })(),
-    ...(typeof o["format"] === "object" && o["format"] !== null
-      ? { format: o["format"] as NumberFormat }
-      : {}),
+    ...(() => {
+      const format = readNumberFormat(o["format"]);
+      return format ? { format } : {};
+    })(),
+    ...(() => {
+      const units = readSheetUnits(o["units"]);
+      return units ? { units } : {};
+    })(),
+    ...(() => {
+      const textStyle = readSheetTextStyle(o["textStyle"]);
+      return textStyle ? { textStyle } : {};
+    })(),
     regions,
     changeLog: Array.isArray(o["changeLog"])
       ? (o["changeLog"] as ChangeEntry[])

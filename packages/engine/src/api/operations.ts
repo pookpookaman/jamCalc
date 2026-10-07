@@ -18,7 +18,7 @@ import { parseStatement } from "../parser.js";
 import { setDisplayUnit } from "../document/source.js";
 import { CalcError } from "../errors.js";
 import { isMatrix } from "../value.js";
-import { preferredUnit } from "../units/prefer.js";
+import { preferredUnit, type SheetUnits } from "../units/prefer.js";
 import { valueIn, parseUnit } from "../units/parse.js";
 import type { Region, RegionId, RegionResult } from "../document/region.js";
 import type { Sheet } from "../document/sheet.js";
@@ -71,13 +71,14 @@ export interface SheetReport {
 function reportValue(
   result: RegionResult | undefined,
   format: ReturnType<typeof resolveFormat>,
+  units: SheetUnits | undefined,
 ): ValueReport | undefined {
   if (!result || result.status !== "ok" || result.isFunction) return undefined;
-  const display = formatResult(result, format);
+  const display = formatResult(result, format, units);
   if (isMatrix(result.value)) {
     return { display, dimension: result.value.commonDimension()?.toString() ?? "mixed" };
   }
-  const unit = result.displayUnit ?? preferredUnit(result.value.dimension);
+  const unit = result.displayUnit ?? preferredUnit(result.value.dimension, units);
   return {
     display,
     ...(unit !== undefined
@@ -95,6 +96,8 @@ function reportValue(
 
 function computed(sheet: Sheet): Worksheet {
   const ws = new Worksheet(sheet.regions);
+  // Prose quotes values in the sheet's own units and numbers (ADR-0017).
+  ws.setDisplay({ format: sheet.format, units: sheet.units });
   ws.recompute();
   return ws;
 }
@@ -218,7 +221,7 @@ function describe(sheet: Sheet, region: Region, ws: Worksheet): RegionReport {
       blockedBy: result.because,
     };
   }
-  const value = reportValue(result, format);
+  const value = reportValue(result, format, sheet.units);
   return {
     ...base,
     source: region.source,
@@ -242,7 +245,7 @@ export function listSymbols(sheet: Sheet): SymbolReport[] {
   return ws.listSymbols().map((s) => {
     const region = sheet.regions.find((r) => r.id === s.definedIn);
     const format = resolveFormat(region?.format, sheet.format);
-    const report = reportValue({ status: "ok", value: s.value }, format);
+    const report = reportValue({ status: "ok", value: s.value }, format, sheet.units);
     return {
       name: s.name,
       definedIn: s.definedIn,

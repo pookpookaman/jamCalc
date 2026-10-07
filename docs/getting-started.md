@@ -39,7 +39,9 @@ M_u := w_u*L^2/8 = kip*ft
 The last line shows *M*<sub>u</sub> = 187.5 kip·ft. That is the whole idea:
 
 - `:=` **defines** a name. `=` at the end **shows** its value; a unit after
-  the `=` shows it in that unit.
+  the `=` shows it in that unit. Without one, it is shown in the sheet's unit
+  for that kind of quantity: kip·ft for a moment, unless the sheet says
+  otherwise.
 - A unit follows a number directly (`25 ft`, `2.4 klf`, `36 ksi`). There is no
   hidden multiplication anywhere else: `2*L`, not `2L`.
 - `_` starts a subscript: `M_u`, `f'_c`, `phi_b`. Greek names (`phi`, `lambda`,
@@ -97,6 +99,18 @@ Sheets flow onto as many pages as they need; a region is never split across a
 page break, and a long table breaks between its rows with its heading
 repeated. The **Page** panel sets paper size, orientation, margins and sheet
 numbering.
+
+The same panel holds the sheet's own settings, also under **Options → Units,
+numbers and text**:
+
+- **Units**: US or SI, and the unit for each kind of quantity (length,
+  force, stress, moment and so on). A unit written after an `=` still wins.
+- **Numbers**: significant figures or decimal places, and whether numbers are
+  written normally, in scientific or in engineering notation.
+- **Text**: the size of maths and of text, the font of text, and whether text
+  starts bold.
+
+A region's own settings in the Format bar always win over the sheet's.
 
 Headers and footers start empty. Double-click the top or bottom of a page to
 lay one out from fields — project, job number, by, checked, *Sheet x of y* —

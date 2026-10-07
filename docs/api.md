@@ -127,6 +127,25 @@ replaces the title block (`project`, `job`, `subject`, `client`, `by`, `date`,
 name is listed in by the values panel — `{ "q_D": "psf" }`, merged, with
 `null` putting a name back to its default; it changes nothing on the sheet.
 
+The sheet's settings ([ADR-0017](decisions/0017-sheet-settings.md)) are three
+more keys, each merged, with `null` clearing a field:
+
+```js
+{ op: "configure",
+  units: { system: "si", length: "mm" },          // us | si, then any of length, area,
+                                                   // volume, inertia, force, lineLoad,
+                                                   // stress, moment, mass, time, flow, power
+  format: { sig: 3, notation: "engineering" },     // decimals | sig; auto | normal |
+                                                   // scientific | engineering
+  textStyle: { textSize: 12, textBold: false, textFont: "serif" } }  // mathSize, textSize,
+                                                   // textBold, textFont: sans | serif | mono
+```
+
+A unit that is not of its kind (`length: "kip"`), a notation or font that
+does not exist, or a size outside 6–72 is refused, and the whole patch with
+it. Reports from `listRegions` and `calc eval` show results in the sheet's
+units and numbers.
+
 `update` fields other than `source`/`text`/`runs` are cosmetic or
 presentational: `style` merges rather than replaces, and a style property set
 to `null` goes back to its default (a style left with nothing in it is
@@ -137,8 +156,8 @@ region's source rather than storing an override beside it, for the same reason
 `setInputs` does.
 
 `configure` covers everything that is not a region — `title`, `titleBlock`,
-`page`, `header`, `footer`, `format` — in the same atomic batch as region
-edits.
+`page`, `header`, `footer`, `format`, `units`, `textStyle` — in the same atomic
+batch as region edits.
 
 **A move takes exactly one of `after` and `to`.** `after` is semantic and is
 what a caller with intent should use. `to` is explicit coordinates, for a

@@ -14,10 +14,10 @@
 
 import type { Region, RegionId, RegionResult, TableRegion } from "./region.js";
 import { valueIn } from "../units/parse.js";
-import { preferredUnit } from "../units/prefer.js";
+import { preferredUnit, type SheetUnits } from "../units/prefer.js";
 import type { Sheet } from "./sheet.js";
 import { plainText } from "./text.js";
-import { formatNumber, type NumberFormat } from "./format.js";
+import { formatNumber, resolveFormat, type NumberFormat } from "./format.js";
 import { isMatrix } from "../value.js";
 import type { MatrixValue } from "../matrix.js";
 import type { Quantity } from "../quantity.js";
@@ -38,10 +38,10 @@ export const PAGE_BREAK_LINE = "---- page break ----";
  * `[1 ft, 2 ft; 3 ft, 4 ft]` — the literal syntax, so a projection round-trips
  * as something a caller could paste back.
  */
-export function formatMatrix(m: MatrixValue, format?: NumberFormat): string {
+export function formatMatrix(m: MatrixValue, format?: NumberFormat, units?: SheetUnits): string {
   const cell = (q: Quantity): string => {
     if (q.dimension.isDimensionless) return formatNumber(q.si, format);
-    const unit = preferredUnit(q.dimension);
+    const unit = preferredUnit(q.dimension, units);
     return unit === undefined
       ? `${formatNumber(q.si, format)} ${q.dimension.toString()}`
       : `${formatNumber(valueIn(q, unit), format)} ${unit}`;
@@ -66,6 +66,7 @@ export interface ResultParts {
 export function formatResultParts(
   result: RegionResult | undefined,
   format?: NumberFormat,
+  units?: SheetUnits,
 ): ResultParts {
   if (!result) return { text: "" };
   switch (result.status) {
@@ -77,13 +78,13 @@ export function formatResultParts(
           unit: result.displayUnit,
         };
       }
-      if (isMatrix(result.value)) return { text: formatMatrix(result.value, format) };
+      if (isMatrix(result.value)) return { text: formatMatrix(result.value, format, units) };
       if (result.value.dimension.isDimensionless) {
         return { text: formatNumber(result.value.si, format) };
       }
       // No unit chosen for this region: fall back to the discipline's default
       // rather than coherent SI, which is correct and unreadable.
-      const preferred = preferredUnit(result.value.dimension);
+      const preferred = preferredUnit(result.value.dimension, units);
       if (preferred !== undefined) {
         return {
           text: formatNumber(valueIn(result.value, preferred), format),
@@ -109,8 +110,9 @@ export function formatResultParts(
 export function formatResult(
   result: RegionResult | undefined,
   format?: NumberFormat,
+  units?: SheetUnits,
 ): string {
-  const { text, unit } = formatResultParts(result, format);
+  const { text, unit } = formatResultParts(result, format, units);
   return unit === undefined ? text : `${text} ${unit}`;
 }
 
@@ -177,7 +179,7 @@ export function project(
       lines.push(left);
       continue;
     }
-    const shown = formatResult(results.get(id));
+    const shown = formatResult(results.get(id), resolveFormat(region.format, sheet.format), sheet.units);
     if (shown === "") {
       lines.push(left);
       continue;

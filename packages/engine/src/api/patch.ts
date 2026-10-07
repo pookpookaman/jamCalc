@@ -28,7 +28,13 @@ import {
   type TableColumn,
   type TextAlign,
 } from "../document/region.js";
-import { applyFormatPatch, type NumberFormatPatch } from "../document/format.js";
+import { applyFormatPatch, NOTATIONS, type NumberFormatPatch } from "../document/format.js";
+import {
+  readSheetTextStyle,
+  readSheetUnits,
+  type SheetTextStyle,
+} from "../document/settings.js";
+import type { QuantityKey, SheetUnits, UnitSystem } from "../units/prefer.js";
 import { readBand, TITLE_BLOCK_KEYS } from "../document/bands.js";
 import {
   isSheetNumber,
@@ -149,6 +155,15 @@ export type PatchOperation =
        */
       readonly valueUnits?: Readonly<Record<string, string | null>>;
       readonly format?: NumberFormatPatch;
+      /**
+       * The sheet's units (ADR-0017). Merged: a field given `null` goes back
+       * to its default.
+       */
+      readonly units?: { readonly system?: UnitSystem | null } & {
+        readonly [K in QuantityKey]?: string | null;
+      };
+      /** Default text and maths style (ADR-0017). Merged, `null` clearing. */
+      readonly textStyle?: { readonly [K in keyof SheetTextStyle]?: SheetTextStyle[K] | null };
     };
 
 /**
@@ -270,7 +285,36 @@ export function applyPatch(
   let titleBlock = sheet.titleBlock;
   let valueUnits = sheet.valueUnits;
   let sheetFormat = sheet.format;
+  let units = sheet.units;
+  let textStyle = sheet.textStyle;
   let configured = false;
+
+  /**
+   * Merges a settings group, `null` removing a field, and refuses anything
+   * the reader would drop: a patch that is quietly half-applied is worse than
+   * one that is refused.
+   */
+  const mergeSettings = <T extends object>(
+    name: string,
+    base: T | undefined,
+    change: object,
+    read: (raw: unknown) => T | undefined,
+    index: number,
+  ): T | undefined => {
+    if (typeof change !== "object" || change === null) {
+      throw new ApiError("invalid_value", `${name} must be an object`, index);
+    }
+    const merged: Record<string, unknown> = { ...base };
+    for (const [k, v] of Object.entries(change)) {
+      if (v === null) delete merged[k];
+      else merged[k] = v;
+    }
+    const clean = (read(merged) ?? {}) as Record<string, unknown>;
+    for (const k of Object.keys(merged)) {
+      if (!(k in clean)) throw new ApiError("invalid_value", `${name}.${k} cannot be ${JSON.stringify(merged[k])}`, index);
+    }
+    return Object.keys(clean).length > 0 ? (clean as T) : undefined;
+  };
 
   const touch = (...ids: RegionId[]) => {
     for (const id of ids) changed.add(id);
@@ -567,6 +611,10 @@ export function applyPatch(
         }
 
         if (operation.format !== undefined) {
+          const notation = operation.format.notation;
+          if (notation !== undefined && !NOTATIONS.includes(notation)) {
+            throw new ApiError("invalid_value", `format.notation must be one of ${NOTATIONS.join(", ")}`, index);
+          }
           const format = applyFormatPatch(next.format, operation.format);
           const { format: _drop, ...rest } = next as Region & { format?: unknown };
           next = (format === undefined ? rest : { ...rest, format }) as Region;
@@ -661,7 +709,7 @@ export function applyPatch(
       }
 
       case "configure": {
-        const keys = ["title", "titleBlock", "page", "header", "footer", "format", "valueUnits"] as const;
+        const keys = ["title", "titleBlock", "page", "header", "footer", "format", "valueUnits", "units", "textStyle"] as const;
         if (!keys.some((k) => operation[k] !== undefined)) {
           throw new ApiError("invalid_patch", "configure changes nothing", index);
         }
@@ -716,7 +764,17 @@ export function applyPatch(
         if (operation.header !== undefined) page = withBand(page, "header", operation.header, index);
         if (operation.footer !== undefined) page = withBand(page, "footer", operation.footer, index);
         if (operation.format !== undefined) {
+          const notation = operation.format.notation;
+          if (notation !== undefined && !NOTATIONS.includes(notation)) {
+            throw new ApiError("invalid_value", `format.notation must be one of ${NOTATIONS.join(", ")}`, index);
+          }
           sheetFormat = applyFormatPatch(sheetFormat, operation.format);
+        }
+        if (operation.units !== undefined) {
+          units = mergeSettings<SheetUnits>("units", units, operation.units, readSheetUnits, index);
+        }
+        if (operation.textStyle !== undefined) {
+          textStyle = mergeSettings<SheetTextStyle>("textStyle", textStyle, operation.textStyle, readSheetTextStyle, index);
         }
         configured = true;
         log.push({
@@ -736,10 +794,12 @@ export function applyPatch(
     }
   });
 
-  const { valueUnits: _was, ...unchanged } = sheet;
+  const { valueUnits: _was, units: _u, textStyle: _t, ...unchanged } = sheet;
   const next: Sheet = {
     ...unchanged,
     ...(valueUnits ? { valueUnits } : {}),
+    ...(units ? { units } : {}),
+    ...(textStyle ? { textStyle } : {}),
     title,
     titleBlock,
     page,

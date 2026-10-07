@@ -98,7 +98,24 @@ export {
   type ProjectionOptions,
   type ResultParts,
 } from "./document/projection.js";
-export { preferredUnit } from "./units/prefer.js";
+export {
+  hasUnitSettings,
+  preferredUnit,
+  QUANTITIES,
+  sheetUnitTable,
+  SYSTEM_UNITS,
+  unitFitsQuantity,
+  type QuantityKey,
+  type SheetUnits,
+  type UnitSystem,
+} from "./units/prefer.js";
+export {
+  DEFAULT_SIZE,
+  FONT_STACKS,
+  TEXT_FONTS,
+  type SheetTextStyle,
+  type TextFont,
+} from "./document/settings.js";
 export { MatrixValue } from "./matrix.js";
 export {
   asScalar,
@@ -112,7 +129,9 @@ export { formatMatrix } from "./document/projection.js";
 export {
   applyFormatPatch,
   formatNumber,
+  NOTATIONS,
   resolveFormat,
+  type Notation,
   type NumberFormat,
   type NumberFormatPatch,
 } from "./document/format.js";

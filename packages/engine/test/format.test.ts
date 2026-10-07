@@ -37,6 +37,16 @@ describe("number formatting", () => {
     expect(formatNumber(0.0000123)).toContain("e-");
   });
 
+  it("writes exponents as the sheet's notation says (ADR-0017)", () => {
+    expect(formatNumber(27116400, { sig: 3, notation: "normal" })).toBe("27100000");
+    expect(formatNumber(0.0000123, { sig: 3, notation: "normal" })).toBe("0.0000123");
+    expect(formatNumber(27116400, { sig: 3, notation: "scientific" })).toBe("2.71e+7");
+    expect(formatNumber(27116400, { sig: 3, notation: "engineering" })).toBe("27.1e+6");
+    expect(formatNumber(0.00412, { decimals: 1, notation: "engineering" })).toBe("4.1e-3");
+    // Rounding that carries into the next power moves the exponent, not the mantissa.
+    expect(formatNumber(999.97, { sig: 3, notation: "engineering" })).toBe("1e+3");
+  });
+
   it("falls back field by field from region to sheet", () => {
     expect(resolveFormat({ decimals: 2 }, { sig: 4 })).toEqual({ decimals: 2, sig: 4 });
     expect(resolveFormat(undefined, { decimals: 3 })).toEqual({ decimals: 3 });

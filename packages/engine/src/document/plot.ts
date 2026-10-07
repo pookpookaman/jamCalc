@@ -15,7 +15,7 @@ import { MatrixValue } from "../matrix.js";
 import type { Quantity } from "../quantity.js";
 import { isMatrix, type Value } from "../value.js";
 import { valueIn } from "../units/parse.js";
-import { preferredUnit } from "../units/prefer.js";
+import { preferredUnit, type SheetUnits } from "../units/prefer.js";
 import type { PlotRegion, PlotSeries } from "./region.js";
 
 /** A plot has no source text, so there is no span to point at. */
@@ -155,7 +155,7 @@ export type Lookup = (name: string) => Value | undefined;
  * evaluation order, so a plot sees exactly the definitions a math region in
  * the same place would.
  */
-export function buildPlot(region: PlotRegion, lookup: Lookup): PlotModel {
+export function buildPlot(region: PlotRegion, lookup: Lookup, units?: SheetUnits): PlotModel {
   if (region.series.length === 0) {
     throw new CalcError("domain", "this plot has no series yet", NO_SPAN);
   }
@@ -173,9 +173,9 @@ export function buildPlot(region: PlotRegion, lookup: Lookup): PlotModel {
     u === undefined || u.trim() === "" ? undefined : u;
 
   const xUnit =
-    override(region.xUnit) ?? preferredUnit((firstX[0] as Quantity).dimension);
+    override(region.xUnit) ?? preferredUnit((firstX[0] as Quantity).dimension, units);
   const yUnit =
-    override(region.yUnit) ?? preferredUnit((firstY[0] as Quantity).dimension);
+    override(region.yUnit) ?? preferredUnit((firstY[0] as Quantity).dimension, units);
 
   const traces: PlotTrace[] = [];
   const xs: number[] = [];

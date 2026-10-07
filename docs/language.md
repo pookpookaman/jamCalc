@@ -26,6 +26,12 @@ f(x, y) := x*y              define a function
 [ADR-0004](decisions/0004-inline-result.md); the alternative is a second region
 for every value you want to see, and sheets full of paired regions.
 
+`=` with no unit shows the value in the sheet's unit for its kind of quantity
+([ADR-0017](decisions/0017-sheet-settings.md)): kip·ft for a moment in a US
+sheet, kN·m in an SI one, or whatever the sheet's settings choose. The number
+is written as the sheet's settings say: significant figures or decimals, in normal, scientific or engineering
+notation. Neither changes a computed value, only how it is shown.
+
 ## Solvers
 
 Three functions take a function of one variable and work on it numerically.

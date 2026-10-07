@@ -22,9 +22,9 @@ import type { Value } from "../value.js";
 import { evaluateTable, isBlankTable } from "./table.js";
 import { buildPlot, isBlankPlot, type PlotModel } from "./plot.js";
 import { resolveReferences, type TextRun } from "./text.js";
-import { formatNumber } from "./format.js";
+import { formatNumber, type NumberFormat } from "./format.js";
 import { formatMatrix } from "./projection.js";
-import { preferredUnit } from "../units/prefer.js";
+import { preferredUnit, type SheetUnits } from "../units/prefer.js";
 import { valueIn } from "../units/parse.js";
 import { isMatrix } from "../value.js";
 import {
@@ -106,6 +106,11 @@ export class Worksheet {
   private dirty = new Set<RegionId>();
   /** Set when region membership or positions changed, forcing a graph rebuild. */
   private structuralChange = true;
+  /** The sheet's own numbers and units, for prose and plots (ADR-0017). */
+  private display: { format: NumberFormat | undefined; units: SheetUnits | undefined } = {
+    format: undefined,
+    units: undefined,
+  };
 
   constructor(
     regions: readonly Region[] = [],
@@ -184,6 +189,15 @@ export class Worksheet {
     } else {
       this.structuralChange = true;
     }
+  }
+
+  /**
+   * The sheet's number format and units, which prose and plots are written in.
+   * Text and plots are resolved afresh on every recompute, so this takes
+   * effect at the next one.
+   */
+  setDisplay(display: { readonly format?: NumberFormat | undefined; readonly units?: SheetUnits | undefined }): void {
+    this.display = { format: display.format, units: display.units };
   }
 
   private markDirty(roots: readonly RegionId[]): void {
@@ -311,7 +325,7 @@ export class Worksheet {
           this.plotModels.set(id, buildPlot(region, (name) => {
             const bound = env.get(name);
             return bound?.kind === "value" ? bound.value : undefined;
-          }));
+          }, this.display.units));
           this.results.delete(id);
         } catch (e) {
           this.plotModels.delete(id);
@@ -475,13 +489,14 @@ export class Worksheet {
    * shown beside its formula never disagree.
    */
   private formatReference(value: Value): string {
-    if (isMatrix(value)) return formatMatrix(value);
+    const { format, units } = this.display;
+    if (isMatrix(value)) return formatMatrix(value, format, units);
     const q = value;
-    if (q.dimension.isDimensionless) return formatNumber(q.si);
-    const unit = preferredUnit(q.dimension);
+    if (q.dimension.isDimensionless) return formatNumber(q.si, format);
+    const unit = preferredUnit(q.dimension, units);
     return unit === undefined
-      ? `${formatNumber(q.si)} ${q.dimension.toString()}`
-      : `${formatNumber(valueIn(q, unit))} ${unit}`;
+      ? `${formatNumber(q.si, format)} ${q.dimension.toString()}`
+      : `${formatNumber(valueIn(q, unit), format)} ${unit}`;
   }
 
   /** Prose with its references resolved, when the region has any. */

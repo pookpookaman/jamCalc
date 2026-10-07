@@ -12,7 +12,8 @@
  *   1. the unit the user chose for it in the list, when it fits;
  *   2. the unit its definition asks for (`= kip*ft`) or was written in
  *      (`65 psf`) — what the engineer typed is what they think in;
- *   3. a unit that suits its size (`readableUnit`).
+ *   3. the sheet's unit for its kind of quantity, when the sheet has chosen
+ *      units (ADR-0017); otherwise a unit that suits its size (`readableUnit`).
  *
  * Presentation only: nothing here changes a stored or computed magnitude.
  */
@@ -24,7 +25,7 @@ import type { Quantity } from "../quantity.js";
 import { DIM, type Dimension } from "../dimension.js";
 import { parseStatement } from "../parser.js";
 import { parseUnit, valueIn } from "../units/parse.js";
-import { preferredUnit } from "../units/prefer.js";
+import { hasUnitSettings, preferredUnit, type SheetUnits } from "../units/prefer.js";
 import { formatNumber, type NumberFormat } from "./format.js";
 import type { ResultParts } from "./projection.js";
 
@@ -44,9 +45,14 @@ const FAMILIES: ReadonlyArray<readonly [Dimension, readonly string[]]> = [
   [DIM.SECOND_MOMENT_OF_AREA, ["ft^4", "in^4"]],
 ];
 
-/** A unit that suits a quantity's size, or the discipline default. */
-export function readableUnit(q: Quantity): string | undefined {
+/**
+ * A unit that suits a quantity's size, or the discipline default. A sheet that
+ * has chosen its units gets those instead: it asked for kN, not for whichever
+ * unit makes the number largest.
+ */
+export function readableUnit(q: Quantity, units?: SheetUnits): string | undefined {
   if (q.dimension.isDimensionless) return undefined;
+  if (hasUnitSettings(units)) return preferredUnit(q.dimension, units);
   const family = FAMILIES.find(([dim]) => dim.equals(q.dimension))?.[1];
   if (!family) return preferredUnit(q.dimension);
   if (q.si === 0 || !Number.isFinite(q.si)) return family[0];
@@ -93,15 +99,15 @@ export function writtenUnitOf(source: string): string | undefined {
   }
 }
 
-function quantityParts(q: Quantity, unit: string | undefined, format?: NumberFormat): ResultParts {
+function quantityParts(q: Quantity, unit: string | undefined, format?: NumberFormat, units?: SheetUnits): ResultParts {
   if (q.dimension.isDimensionless) return { text: formatNumber(q.si, format) };
-  const u = unit !== undefined && unitFits(unit, q.dimension) ? unit : readableUnit(q);
+  const u = unit !== undefined && unitFits(unit, q.dimension) ? unit : readableUnit(q, units);
   return u === undefined
     ? { text: formatNumber(q.si, format), unit: q.dimension.toString() }
     : { text: formatNumber(valueIn(q, u), format), unit: u };
 }
 
-function matrixParts(m: MatrixValue, unit: string | undefined, format?: NumberFormat): ResultParts {
+function matrixParts(m: MatrixValue, unit: string | undefined, format?: NumberFormat, units?: SheetUnits): ResultParts {
   const rows = m.toRows();
   const common = m.commonDimension();
   // One unit for the whole list when every cell shares a dimension: the unit
@@ -109,20 +115,25 @@ function matrixParts(m: MatrixValue, unit: string | undefined, format?: NumberFo
   if (common && !common.isDimensionless) {
     const cells = rows.flat();
     const largest = cells.reduce((a, b) => (Math.abs(b.si) > Math.abs(a.si) ? b : a));
-    const u = unit !== undefined && unitFits(unit, common) ? unit : readableUnit(largest);
+    const u = unit !== undefined && unitFits(unit, common) ? unit : readableUnit(largest, units);
     if (u !== undefined) {
       const text = `[${rows.map((r) => r.map((q) => formatNumber(valueIn(q, u), format)).join(", ")).join("; ")}]`;
       return { text, unit: u };
     }
   }
   const cell = (q: Quantity): string => {
-    const p = quantityParts(q, unit, format);
+    const p = quantityParts(q, unit, format, units);
     return p.unit === undefined ? p.text : `${p.text} ${p.unit}`;
   };
   return { text: `[${rows.map((r) => r.map(cell).join(", ")).join("; ")}]` };
 }
 
 /** A value split into number and unit, shown in `unit` where it fits. */
-export function formatValueParts(value: Value, unit?: string, format?: NumberFormat): ResultParts {
-  return isMatrix(value) ? matrixParts(value, unit, format) : quantityParts(value, unit, format);
+export function formatValueParts(
+  value: Value,
+  unit?: string,
+  format?: NumberFormat,
+  units?: SheetUnits,
+): ResultParts {
+  return isMatrix(value) ? matrixParts(value, unit, format, units) : quantityParts(value, unit, format, units);
 }

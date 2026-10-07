@@ -43,6 +43,9 @@ import {
   serializeSheet,
   styleOfRange,
   writtenUnitOf,
+  DEFAULT_SIZE,
+  FONT_STACKS,
+  type SheetTextStyle,
   type Value,
 } from "@jamcalc/engine";
 import { RegionBody } from "./RegionBody.js";
@@ -54,6 +57,7 @@ import { BandBar } from "./BandBar.js";
 import { addItem, moveItem, nextFreeSpot, removeItem, type NewItem } from "./bandEdit.js";
 import { VERSION } from "./product.js";
 import { MenuButton } from "./MenuButton.js";
+import { SheetSettings } from "./SheetSettings.js";
 import { alignSnap, type Box, type Guide } from "./alignSnap.js";
 import { ImageRegionBody } from "./ImageRegionBody.js";
 import { PlotRegionBody } from "./PlotRegionBody.js";
@@ -110,6 +114,23 @@ function AlignIcon({ align }: { align: "left" | "center" | "right" }) {
  * boundary where a 1px nudge could reorder the sheet.
  */
 const SNAP_STEPS = [0, 4, 6, 12, 24] as const;
+
+/**
+ * How a region looks where it sets nothing itself: the sheet's defaults
+ * (ADR-0017), and failing those the app's own. Text has always started bold.
+ */
+function defaultLook(kind: string, sheetStyle: SheetTextStyle | undefined): {
+  size: number;
+  bold: boolean;
+  family: string | undefined;
+} {
+  const size = kind === "math" ? sheetStyle?.mathSize : kind === "text" ? sheetStyle?.textSize : undefined;
+  return {
+    size: size ?? DEFAULT_SIZE,
+    bold: kind === "text" && (sheetStyle?.textBold ?? true),
+    family: kind === "text" && sheetStyle?.textFont ? FONT_STACKS[sheetStyle.textFont] : undefined,
+  };
+}
 
 const snap = (v: number, step: number): number =>
   step > 0 ? Math.round(v / step) * step : Math.round(v);
@@ -1343,6 +1364,7 @@ Export anyway?`,
                       <>
                         <button onClick={() => { openTab("symbols"); close(); }}>Values panel</button>
                         <button onClick={() => { openTab("page"); close(); }}>Page setup</button>
+                        <button onClick={() => { openTab("page"); close(); }}>Units, numbers and text</button>
                         <button onClick={() => { close(); startBandEditing(); }}>Header and footer</button>
                         <span className="menu-rule" />
                         <label className="menu-row">
@@ -1429,7 +1451,7 @@ Export anyway?`,
 
                 {controls.size ? (
                   <select
-                    value={activeStyle.fontSize ?? selectedRegion?.style?.fontSize ?? 13}
+                    value={activeStyle.fontSize ?? selectedRegion?.style?.fontSize ?? defaultLook(selectedRegion?.kind ?? "", doc.textStyle).size}
                     onChange={(e) => setStyle({ fontSize: Number(e.target.value) })}
                     title="font size"
                   >
@@ -1458,8 +1480,14 @@ Export anyway?`,
                   <>
                     <button
                       onMouseDown={(e) => e.preventDefault()}
-                      className={`toggle ${activeStyle.bold ? "on" : ""}`}
-                      onClick={() => setStyle({ bold: !activeStyle.bold })}
+                      // What is drawn, not only what is set: text with no weight of
+                      // its own is bold or not as the sheet's default says.
+                      className={`toggle ${(activeStyle.bold ?? selectedRegion?.style?.bold ?? defaultLook(selectedRegion?.kind ?? "", doc.textStyle).bold) ? "on" : ""}`}
+                      onClick={() =>
+                        setStyle({
+                          bold: !(activeStyle.bold ?? selectedRegion?.style?.bold ?? defaultLook(selectedRegion?.kind ?? "", doc.textStyle).bold),
+                        })
+                      }
                       title="bold"
                     >
                       <b>B</b>
@@ -1720,7 +1748,7 @@ Export anyway?`,
                                   ...(region.size.height ? { minHeight: region.size.height } : {}),
                                 }
                               : {}),
-                            fontSize: `${style.fontSize ?? 13}px`,
+                            fontSize: `${style.fontSize ?? defaultLook(region.kind, doc.textStyle).size}px`,
                             color: style.color ?? "inherit",
                             // The equation's colour reaches its units too, which
                             // are otherwise grey; the result's covers its number
@@ -1729,8 +1757,11 @@ Export anyway?`,
                             ...(style.resultColor
                               ? { "--result-color": style.resultColor, "--result-unit-color": style.resultColor }
                               : {}),
-                            fontWeight: (style.bold ?? region.kind === "text") ? 600 : 400,
+                            fontWeight: (style.bold ?? defaultLook(region.kind, doc.textStyle).bold) ? 600 : 400,
                             fontStyle: style.italic ? "italic" : "normal",
+                            ...(defaultLook(region.kind, doc.textStyle).family
+                              ? { fontFamily: defaultLook(region.kind, doc.textStyle).family }
+                              : {}),
                           }}
                           onPointerDown={(e) => {
                             // Anywhere on the region is a handle, so long as the
@@ -1835,7 +1866,7 @@ Export anyway?`,
                           ) : (
                             <RegionBody
                               region={region}
-                              resultParts={formatResultParts(result, numberFormat)}
+                              resultParts={formatResultParts(result, numberFormat, doc.units)}
                               showResult={result?.status === "ok" && result.showResult === true}
                               problemText={status === "ok" ? "" : formatResult(result)}
                               onPickUnit={() => setUnitPickerFor(region.id)}
@@ -1956,7 +1987,7 @@ Export anyway?`,
                         >
                           <td className="name">{s.name}</td>
                           {(() => {
-                            const parts = formatValueParts(s.value, listUnit(s.name, s.definedIn));
+                            const parts = formatValueParts(s.value, listUnit(s.name, s.definedIn), doc.format, doc.units);
                             const shown = parts.unit === undefined ? parts.text : `${parts.text} ${parts.unit}`;
                             const dimension = isMatrix(s.value) ? s.value.commonDimension() : s.value.dimension;
                             return (
@@ -2237,11 +2268,10 @@ function PagePanel({
         </div>
       </div>
 
+      <SheetSettings sheet={sheet} />
+
       <div className="group">
         <div className="group-title">Header and footer</div>
-        <p className="panel-note">
-          Laid out on the page: double-click the header or footer, or use the button.
-        </p>
         <button className="panel-button" onClick={onEditBands}>
           Edit header and footer
         </button>

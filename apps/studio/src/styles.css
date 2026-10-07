@@ -1743,3 +1743,12 @@ body.is-dragging [contenteditable="true"] { user-select: text; -webkit-user-sele
 }
 .symbols td.val .val-unit:hover { border-bottom-color: currentColor; }
 .symbols td.val .val-unit.is-chosen { border-bottom-color: var(--line); }
+
+/* Sheet settings (ADR-0017): longer labels than the title block's, and selects. */
+.page-panel .field.setting span { width: 104px; flex: none; }
+.page-panel .field.setting select {
+  flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 2px 4px;
+  border: 1px solid var(--line); border-radius: 3px; background: var(--surface); color: inherit;
+}
+.page-panel .field.check-field input { flex: none; margin: 0; }
+.page-panel .field.check-field span { width: auto; color: inherit; }

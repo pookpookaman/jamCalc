@@ -14,7 +14,22 @@ test, so a change cannot ship without being written down here.
 
 ### Results that change
 
-- None.
+- None. Sheet settings change how a result is shown only when a sheet sets
+  them; no sheet's numbers change.
+
+### Added
+
+- **Sheet settings** in the Page panel ([ADR-0017](docs/decisions/0017-sheet-settings.md)):
+  US or SI units and a unit for each kind of quantity; significant figures or
+  decimals, and normal, scientific or engineering notation; the size of maths
+  and text, the font of text, and whether text starts bold.
+- The toolbar's actions sit on their own row under the sheet's title.
+
+### Changed
+
+- The text projection and `calc` reports show numbers in the sheet's number
+  format, as the page always did.
+- The Format bar's **B** shows text as bold when it is drawn bold.
 
 ## 0.1.0 — first preview
 

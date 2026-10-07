@@ -40,6 +40,7 @@
 | [0014](decisions/0014-mathlive.md) | MathLive edits the notation; the sheet keeps the source |
 | [0015](decisions/0015-literal-names.md) | A backtick keeps a word as written |
 | [0016](decisions/0016-versions.md) | One product version, and results that change are declared |
+| [0017](decisions/0017-sheet-settings.md) | Sheet settings: units, numbers and text |
 
 New decisions get an ADR **before** the code that assumes them. The format is
 short: what was decided, what the alternatives were, and what it costs.
